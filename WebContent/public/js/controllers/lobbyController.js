@@ -5,9 +5,8 @@ function lobbyControllerFunction($scope) {
 
 
     $scope.init = function(){
-        console.log('lobby')
-        
-        
+        console.log('lobby');
+
     };
 
 
