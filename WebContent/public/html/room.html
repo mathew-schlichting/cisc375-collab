@@ -1,0 +1,11 @@
+<div ng-controller="roomCtrl" ng-init="init()">
+    <h1>
+        You're In Room: {{roomid}}
+    </h1>
+
+
+    <div id="textChat">
+        <input ng-model="message" type="text" name="message"/>
+        <button class="btn btn-success" ng-click="sendMessage();">Send</button>
+    </div>
+</div>

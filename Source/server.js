@@ -2,20 +2,22 @@
  * Created by Mathew on 4/30/2018.
  */
 /* Internal Dependencies */
-var fs      = require(  'fs'    );
-var url     = require(  'url'   );
-var path    = require(  'path'  );
+const fs      = require(  'fs'    );
+const url     = require(  'url'   );
+const path    = require(  'path'  );
 
 /* External Dependencies */
-var express     = require( 'express'       );
-var favicon     = require( 'serve-favicon' );
-var bodyParser  = require( 'body-parser'   );
-
+const express       = require( 'express'       );
+const favicon       = require( 'serve-favicon' );
+const bodyParser    = require( 'body-parser'   );
+const WebSocket     = require( 'ws'            );
+const http          = require( 'http'          );
 
 /* Server Variables */
-var port = '8018';
-var app = express();
-var public_dir = path.join(__dirname, '../WebContent/public');
+const port = '8018';
+const app = express();
+const server = http.createServer(app);
+const public_dir = path.join(__dirname, '../WebContent/public');
 
 
 String.prototype.replaceAll = function(search, replacement) {return this.replace(new RegExp(search, 'g'), replacement);};
@@ -25,7 +27,9 @@ String.prototype.replaceAll = function(search, replacement) {return this.replace
 
 function init(){
     console.log('Now listening on port: ', port);
-    app.listen(port)
+    server.listen(port);
+
+    initWebSocket();
 }
 
 
@@ -36,7 +40,29 @@ app.use(bodyParser.json());
 app.use('/', express.static(public_dir));
 
 
+/******************** Websocket Stuff *****************************/
 
+function initWebSocket(){
+    const wss = new WebSocket.Server({server: server});
 
+    wss.on('connection', (ws) => {
+        console.log('New Connection');
+        ws.on('message', (message) => {
+            // Broadcast any received message to all clients
+            console.log('received: %s', message);
+            wss.broadcast(message);
+        });
+    });
+
+    wss.broadcast = function(data) {
+        this.clients.forEach(function(client) {
+            if(client.readyState === WebSocket.OPEN) {
+                client.send(data);
+            }
+        });
+    };
+    
+    console.log('Created Websocket Server')
+}
 
 init();
