@@ -7,11 +7,16 @@
         <!-- Bootstrap Style -->
         <link href="external/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>
 
+        <!-- Custom Style -->
+        <link href="css/main-style.css" rel="stylesheet"/>
+        <link href="css/space-size.css" rel="stylesheet"/>
+        <link href="css/room-style.css" rel="stylesheet"/>
+
 
 
     </head>
     <body ng-app="collabApp" ng-controller="appCtrl">
-        <div>
+        <div id="nav">
             <div class="row">
                 <div class="col-md-3 text-center">
                     <h1>
@@ -27,7 +32,7 @@
 
         </div>
 
-        <div id="page" ng-init="init()" ui-view>
+        <div id="page" class="padding-md" ng-init="init()" ui-view>
             <!-- everything is loaded in here -->
         </div>
     </body>

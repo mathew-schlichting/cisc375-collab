@@ -1,0 +1,41 @@
+.padding-xs {
+    padding: 5px;
+}
+.padding-sm {
+    padding: 1em;
+}
+.padding-md {
+    padding: 2em;
+}
+.padding-lg{
+    padding: 5em;
+}
+.padding-xl {
+    padding: 7em;
+}
+
+.margin-xs {
+    margin: 5px;
+}
+.margin-sm {
+    margin: 1em;
+}
+.margin-md {
+    margin: 2em;
+}
+.margin-lg{
+    margin: 5em;
+}
+.margin-xl {
+    margin: 7em;
+}
+.full-size {
+    width: 100%;
+    height: 100%;
+}
+.page-width {
+    width: 100vw;
+}
+.page-height {
+    height: 100vh;
+}

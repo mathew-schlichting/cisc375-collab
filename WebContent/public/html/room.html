@@ -1,11 +1,40 @@
 <div ng-controller="roomCtrl" ng-init="init()">
-    <h1>
-        You're In Room: {{roomid}}
-    </h1>
-
-
-    <div id="textChat">
-        <input ng-model="message" type="text" name="message"/>
-        <button class="btn btn-success" ng-click="sendMessage();">Send</button>
+    <div class="row">
+        <div class="col-sm-2">
+            <h3>
+                Room: {{roomid}}
+            </h3>
+        </div>
     </div>
+
+    <div id="messageChatRow" class="row">
+        <div class="col-md-offset-9 col-md-3">
+            <div id="textChat" class="chat-box padding-md">
+                <div class="row">
+                    <div class="col-md-offset-1 col-md-10">
+                        <div class="panel">
+                            <ul id="messageList" class="list-group">
+                                <li class="list-group-item">Message here</li>
+                                <li class="list-group-item">Message here</li>
+                                <li class="list-group-item">Message here</li>
+                                <li class="list-group-item">Message here</li>
+                                <li class="list-group-item">Message here</li>
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="row chat-input text-center">
+                    <div class="col-sm-12 text-center">
+                        <input class="chat-input" ng-model="message" type="text" name="message"/>
+                        <button class="btn btn-success chat-input" ng-click="sendMessage();">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
 </div>

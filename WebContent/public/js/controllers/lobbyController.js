@@ -10,12 +10,14 @@ function lobbyControllerFunction($scope, $state) {
 
     };
 
-
+    $scope.joinRoom = function (id) {
+        $state.go('room', {roomid: id});
+    };
 
     $scope.createRoom = function (){
         console.log('in here');
         var id = Math.floor(8999 * Math.random()) + 1111;
-        $state.go('room', {roomid: id});
+        $scope.joinRoom(id);
     };
 
 

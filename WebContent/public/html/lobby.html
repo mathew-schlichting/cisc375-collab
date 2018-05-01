@@ -1,8 +1,33 @@
 <div ng-controller="lobbyCtrl" ng-init="init()">
-    <h1>
-        Choose a room
-    </h1>
+
+    <div class="row text-center">
+        <div class="col-md-4 col-md-offset-4 text-center">
+            <h1>
+                Choose a room
+            </h1>
+        </div>
+    </div>
 
 
-    <button class="btn btn-success" ng-click="createRoom()">Create Room</button>
+    <div class="row">
+        <div class="col-lg-6 col-lg-offset-3">
+            <ul class="list-group">
+                <li id="1111" class="list-group-item" ng-click="joinRoom(1111);">
+                    <div class="row">
+                        <div class="col-sm-2">
+                            ID: 1111
+                        </div>
+                        <div class="col-sm-2">
+                            People 10/20
+                        </div>
+                    </div>
+                </li>
+
+                <li class="list-group-item">
+                    <button class="btn btn-success full-size" ng-click="createRoom()">Create Room</button>
+                </li>
+            </ul>
+        </div>
+
+    </div>
 </div>

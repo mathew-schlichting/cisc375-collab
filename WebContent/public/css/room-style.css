@@ -1,0 +1,15 @@
+.chat-input {
+    height: 2em;
+}
+
+.chat-box {
+   background-color: #9acfea;
+}
+
+#messageList {
+    overflow-y: scroll;
+}
+
+#messageChatRow {
+    height: 10em !important;
+}
