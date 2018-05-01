@@ -5,6 +5,13 @@
                 Room: {{roomid}}
             </h3>
         </div>
+
+        <div class="col-md-10" id="localVideo">
+        </div>
+
+        <div class="col-md-10" id="remoteVideo">
+        </div>
+
     </div>
 
     <div id="messageChatRow" class="row">
@@ -26,7 +33,7 @@
                 </div>
                 <div class="row chat-input text-center">
                     <div class="col-sm-12 text-center">
-                        <input class="chat-input" ng-model="message" type="text" name="message"/>
+                        <input class="chat-input" ng-model="message" type="text" name="message" />
                         <button class="btn btn-success chat-input" ng-click="sendMessage();">Send</button>
                     </div>
                 </div>
