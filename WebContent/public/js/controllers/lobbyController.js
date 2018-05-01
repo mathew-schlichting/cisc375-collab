@@ -9,9 +9,9 @@ function lobbyControllerFunction($scope, $state, $rootScope) {
 
 		$scope.connection = new WebSocket('ws://' + window.location.hostname + ':8018');
 
-		$scope.connection.onopen = (e) => {
-			$scope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.new_user, $scope.username, {}));
-		};
+        $scope.connection.onopen = (e) => {
+            $scope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.new_user, $rootScope.username, {}));
+        };
 
 		$scope.connection.onmessage = (message)=> {
 			if(message.type === $scope.MESSAGE_TYPES.rooms_list){

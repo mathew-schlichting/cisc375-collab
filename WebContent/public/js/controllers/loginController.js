@@ -1,8 +1,10 @@
 /**
  * Created by Mathew on 5/1/2018.
  */
-function loginControllerFunction($scope, $state) {
+function loginControllerFunction($scope, $state, $rootScope) {
 
+
+    $scope.loginName = '';
 
     $scope.init = function(){
         console.log('login');
@@ -14,8 +16,10 @@ function loginControllerFunction($scope, $state) {
 
     $scope.login = function(){
         if($scope.usernameFormat()) {
-            $.get('/validUser/' + $scope.username, (data) => {
+            $.get('/validUser/' + $scope.loginName, (data) => {
+                console.log(data);
                 if (data.valid) {
+                    $rootScope.username = $scope.loginName;
                     $state.go('lobby');
                 }
                 else {

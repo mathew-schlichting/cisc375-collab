@@ -96,10 +96,11 @@ function initWebSocket(){
         ws.on('message', (message) => {
             // Broadcast any received message to all clients
             console.log('received: %s', message);
+            message = JSON.parse(message);
             if(message.type === MESSAGE_TYPES.new_user){
                 if(isValidUser(message.from)){
                     createNewUser(message.from, this);
-                    this.send(JSON.stringify(rooms));
+                    //this.send(JSON.stringify(rooms));
                 }
             }
             else {
