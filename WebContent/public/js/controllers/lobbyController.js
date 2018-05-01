@@ -1,7 +1,7 @@
 /**
  * Created by Mathew on 4/30/2018.
  */
-function lobbyControllerFunction($scope, $state) {
+function lobbyControllerFunction($scope, $state, $rootScope) {
 
 
 	$scope.init = function() {
@@ -9,18 +9,18 @@ function lobbyControllerFunction($scope, $state) {
 
 		$scope.connection = new WebSocket('ws://' + window.location.hostname + ':8018');
 
-        $scope.connection.onopen = (e) => {
-            $scope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.new_user, $scope.username, {}));
-        };
+		$scope.connection.onopen = (e) => {
+			$scope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.new_user, $scope.username, {}));
+		};
 
-        $scope.connection.onmessage = (message)=> {
-            if(message.type === $scope.MESSAGE_TYPES.rooms_list){
-                $scope.createRoomsList(message.data);
-            }
-            //todo
-            console.log(message);
-        };
-    };
+		$scope.connection.onmessage = (message)=> {
+			if(message.type === $scope.MESSAGE_TYPES.rooms_list){
+				$scope.createRoomsList(message.data);
+			}
+			//todo
+			console.log(message);
+		};
+	};
 
     $scope.loadRooms = function (rooms) {
         $('#roomsList').html(createRoomsList(rooms));

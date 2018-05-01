@@ -1,7 +1,7 @@
 /**
  * Created by Mathew on 4/30/2018.
  */
-function roomControllerFunction($scope, $stateParams) {
+function roomControllerFunction($scope, $stateParams, $rootScope) {
 
 	$scope.roomid = '0001';
 	$scope.meesage = '';
@@ -25,15 +25,7 @@ function roomControllerFunction($scope, $stateParams) {
 
 		$scope.roomid = $stateParams.roomid;
 
-		$scope.connection.onopen = (event) => {
-			console.log('on open');
-			$scope.connection.send("something");
-		};
-		$scope.connection.onmessage = (message) => {
-			console.log(message);
-		};
-
-
+		console.log($rootScope.connection);
 
 	}; // init
 
@@ -45,8 +37,8 @@ function roomControllerFunction($scope, $stateParams) {
 		serverConnection.onmessage = gotMessageFromServer; // TODO - rename this when actually connected
 
 		var constraints = {
-			video: true;
-			audio: true;
+			video: true,
+			audio: true
 		};
 
 		// TODO - this is the part that we need to test to make sure that adapterjs is working correctly:
@@ -63,10 +55,10 @@ function roomControllerFunction($scope, $stateParams) {
 		}
 
 		function start(isCaller) {
-			peerConnection = new RTCPeerConnection(peerConnectionConfig);
+			peerConnection = new RTCPeerConnection($scope.peerConnectionConfig);
 			peerConnection.onicecandidate = gotIceCandidate;
 			peerConnection.onaddstream = gotRemoteStream;
-			peerConnection.addStream(localStream);
+			peerConnection.addStream($scope.localStream);
 
 			if (isCaller) {
 				peerConnection.createOffer(gotDescription, createOfferError);
@@ -100,15 +92,27 @@ function roomControllerFunction($scope, $stateParams) {
 		function createOfferError(error) {
 			console.log(error);
 		}
+
+		function gotMessageFromServer(message) {
+			if (!peerConnection) start(false);
+
+			var signal = JSON.parse(message.data);
+			if (signal.sdp) {
+				peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp), function() {
+					if (signal.sdp.type == 'offer') {
+						peerConnection.createAnswer(gotDescription, createAnswerError);
+					}
+				});
+			} else if (signal.ice) {
+				peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice));
+			}
+		}
 	}; // pageReady
 
 
 	$scope.sendMessage = function() {
-		$scope.connection.send("something");
-
+		$rootScope.connection.send("something");
 	}
-
-
 
 } // roomControllerFunction
 
