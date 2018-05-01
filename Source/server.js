@@ -18,7 +18,8 @@ const port = '8018';
 const app = express();
 const server = http.createServer(app);
 const public_dir = path.join(__dirname, '../WebContent/public');
-
+const rooms = [];
+const people = [];
 
 String.prototype.replaceAll = function(search, replacement) {return this.replace(new RegExp(search, 'g'), replacement);};
 
@@ -39,6 +40,21 @@ app.use(bodyParser.json());
 
 app.use('/', express.static(public_dir));
 
+app.get('/validUser/:user', (req, res) => {
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.write('{"valid":' + isValidUser(req.params.user) + '}');
+    res.end();
+});
+
+
+function isValidUser(user) {
+    var result = true;
+    people.forEach(function (person){
+        result = result && person.user !== user;
+    });
+    return result;
+}
+
 
 /******************** Websocket Stuff *****************************/
 
@@ -46,7 +62,7 @@ function initWebSocket(){
     const wss = new WebSocket.Server({server: server});
 
     wss.on('connection', (ws) => {
-        console.log('New Connection');
+        
         ws.on('message', (message) => {
             // Broadcast any received message to all clients
             console.log('received: %s', message);

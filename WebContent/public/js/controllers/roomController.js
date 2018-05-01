@@ -30,7 +30,7 @@ function roomControllerFunction($scope, $stateParams) {
 
 
     $scope.sendMessage = function(){
-        $scope.connection.send("something");
+        $scope.connection.send($scope.meesage);
 
     }
 
