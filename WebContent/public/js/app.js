@@ -32,5 +32,22 @@ collabApp.config(function($stateProvider) {
 		console.log('test');
 		$state.go('login');
 	};
+    $scope.MESSAGE_TYPES = {
+        new_user: 0,
+        rooms_list: 1
+    };
+
+
+    $scope.username = '';
+
+
+    $scope.init = function (){
+        console.log('test');
+        $state.go('login');
+    };
+    
+    $scope.createMessage = function (typeValue, fromValue, dataValue){
+        return JSON.stringify({type: typeValue, from: fromValue, data: dataValue});
+    }
 
 });

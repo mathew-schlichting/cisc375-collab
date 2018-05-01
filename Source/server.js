@@ -18,8 +18,13 @@ const port = '8018';
 const app = express();
 const server = http.createServer(app);
 const public_dir = path.join(__dirname, '../WebContent/public');
-const rooms = [];
-const people = [];
+const rooms = {};
+const people = {};
+const MESSAGE_TYPES = {
+    new_user: 0,
+    rooms_list: 1
+};
+
 
 String.prototype.replaceAll = function(search, replacement) {return this.replace(new RegExp(search, 'g'), replacement);};
 
@@ -40,6 +45,8 @@ app.use(bodyParser.json());
 
 app.use('/', express.static(public_dir));
 
+
+/***********************   User creation   *************************/
 app.get('/validUser/:user', (req, res) => {
     res.writeHead(200, {'Content-Type': 'application/json'});
     res.write('{"valid":' + isValidUser(req.params.user) + '}');
@@ -48,12 +55,35 @@ app.get('/validUser/:user', (req, res) => {
 
 
 function isValidUser(user) {
-    var result = true;
-    people.forEach(function (person){
-        result = result && person.user !== user;
-    });
-    return result;
+    return people[user] === undefined;
 }
+
+function createNewUser(user, ws){
+    people[user] = {room: null};
+    ws.username = user;
+}
+
+
+/****************************** *************************************/
+
+
+/***************************** room handling   *********************/
+
+function getListOfRooms(){
+    return rooms;
+}
+
+function isCurrentRoom(roomid){
+    return rooms[roomid] === undefined
+}
+function createNewRoom(roomid){
+    rooms[roomid] = {current_users: 0};
+    wss.broadcastInLobby(JSON.stringify({type:MESSAGE_TYPES.rooms_list, from: 'server', data: getListOfRooms()}));
+}
+
+/*************************************** ****************************/
+
+
 
 
 /******************** Websocket Stuff *****************************/
@@ -66,13 +96,29 @@ function initWebSocket(){
         ws.on('message', (message) => {
             // Broadcast any received message to all clients
             console.log('received: %s', message);
-            wss.broadcast(message);
+            if(message.type === MESSAGE_TYPES.new_user){
+                if(isValidUser(message.from)){
+                    createNewUser(message.from, this);
+                    this.send(JSON.stringify(rooms));
+                }
+            }
+            else {
+                wss.broadcastInRoom(message);
+            }
         });
     });
 
-    wss.broadcast = function(data) {
+    wss.broadcastInRoom = function(data) {
         this.clients.forEach(function(client) {
-            if(client.readyState === WebSocket.OPEN) {
+            if(client.readyState === WebSocket.OPEN && people[client.username].room === people[data.from].room) {
+                client.send(data);
+            }
+        });
+    };
+
+    wss.broadcastInLobby = function(data){
+        this.clients.forEach(function(client) {
+            if(client.readyState === WebSocket.OPEN && people[client.username].room === null) {
                 client.send(data);
             }
         });

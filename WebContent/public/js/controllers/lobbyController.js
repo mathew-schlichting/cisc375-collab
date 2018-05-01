@@ -9,27 +9,54 @@ function lobbyControllerFunction($scope, $state) {
 
 		$scope.connection = new WebSocket('ws://' + window.location.hostname + ':8018');
 
-		// This will send a "create user" event
-		$scope.connection.onopen = (event) => {
-			console.log('on open');
-			$scope.connection.send("something");
-		};
-		$scope.connection.onmessage = (message) => {
-			console.log(message);
-		};
-	};
+        $scope.connection.onopen = (e) => {
+            $scope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.new_user, $scope.username, {}));
+        };
 
-	$scope.joinRoom = function(id) {
-		$state.go('room', {
-			roomid: id
-		});
-	};
+        $scope.connection.onmessage = (message)=> {
+            if(message.type === $scope.MESSAGE_TYPES.rooms_list){
+                $scope.createRoomsList(message.data);
+            }
+            //todo
+            console.log(message);
+        };
+    };
 
-	$scope.createRoom = function() {
-		console.log('in here');
-		var id = Math.floor(8999 * Math.random()) + 1111;
-		$scope.joinRoom(id);
-	};
+    $scope.loadRooms = function (rooms) {
+        $('#roomsList').html(createRoomsList(rooms));
+    };
+
+
+    $scope.createRoomsList = function(rooms) {
+        var html = '';
+        for (var id in rooms) {
+            html += createRoomTile(id);
+        }
+        html += '<li class="list-group-item"><button class="btn btn-success full-size" ng-click="createRoom()">Create Room</button></li>';
+        return html;
+    };
+
+    $scope.createRoomTile = function(id){
+        return  '<li id="' + id + '" class="list-group-item" ng-click="joinRoom(' + id + ');">'+
+                    '<div class="row">'+
+                        '<div class="col-sm-2">'+
+                            'ID: ' + id +
+                        '</div>'+
+                        '<div class="col-sm-2">'+
+                            'People 10/20'+
+                        '</div>'+
+                    '</div>'+
+                '</li>';
+    };
+
+    $scope.joinRoom = function (id) {
+        $state.go('room', {roomid: id});
+    };
+
+    $scope.createRoom = function (){
+        var id = Math.floor(8999 * Math.random()) + 1111;
+        $scope.joinRoom(id);
+    };
 
 
 

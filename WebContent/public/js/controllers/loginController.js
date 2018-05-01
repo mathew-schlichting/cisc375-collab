@@ -3,27 +3,28 @@
  */
 function loginControllerFunction($scope, $state) {
 
-    $scope.username = '';
 
     $scope.init = function(){
         console.log('login');
-
-
-
+        
 
     };
+    
+    
 
     $scope.login = function(){
         if($scope.usernameFormat()) {
             $.get('/validUser/' + $scope.username, (data) => {
                 if (data.valid) {
-
+                    $state.go('lobby');
                 }
                 else {
                     alert('Username already taken!')
                 }
-                console.log(data);
             });
+        }
+        else{
+            alert('Username must be alpha numeric!')
         }
     };
 
