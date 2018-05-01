@@ -32,6 +32,11 @@ function roomControllerFunction($scope, $stateParams) {
 	};
 
 
+<<<<<<< HEAD
+=======
+    $scope.sendMessage = function(){
+        $scope.connection.send($scope.meesage);
+>>>>>>> 9b3fb3d5dda3e97e384b5ceb8a52e38e087e5123
 
 	$scope.sendMessage = function() {
 		$scope.connection.send("something");

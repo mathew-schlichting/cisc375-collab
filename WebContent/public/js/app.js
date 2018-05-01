@@ -9,12 +9,14 @@ collabApp.config(function($stateProvider) {
     $stateProvider
         .state('lobby', { url: '/lobby', templateUrl: 'html/lobby.html', controller: 'lobbyCtrl'})
         .state('room', { url: '/room/{roomid}', templateUrl: 'html/room.html', controller: 'roomCtrl'})
+        .state('login', { url: '/login', templateUrl: 'html/login.html', controller: 'loginCtrl'})
+
 
 }).controller("appCtrl", function($scope, $state, $stateParams) {
 
     $scope.init = function (){
         console.log('test');
-        $state.go('lobby');
+        $state.go('login');
     };
 
 });
