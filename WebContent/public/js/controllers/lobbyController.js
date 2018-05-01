@@ -1,20 +1,21 @@
 /**
  * Created by Mathew on 4/30/2018.
  */
-function lobbyControllerFunction($scope, $state) {
+function lobbyControllerFunction($scope, $state, $rootScope) {
 
 
 	$scope.init = function() {
 		console.log('lobby');
 
-		$scope.connection = new WebSocket('ws://' + window.location.hostname + ':8018');
+		$rootScope.connection = new WebSocket('ws://' + window.location.hostname + ':8018');
+		console.log($rootScope.connection);
 
 		// This will send a "create user" event
-		$scope.connection.onopen = (event) => {
+		$rootScope.connection.onopen = (event) => {
 			console.log('on open');
-			$scope.connection.send("something");
+			$rootScope.connection.send("something");
 		};
-		$scope.connection.onmessage = (message) => {
+		$rootScope.connection.onmessage = (message) => {
 			console.log(message);
 		};
 	};
