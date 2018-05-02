@@ -1,7 +1,7 @@
 /**
  * Created by Mathew on 4/30/2018.
  */
-function roomControllerFunction($scope, $stateParams, $rootScope) {
+function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
 
 	$scope.roomid = '0001';
 	$scope.meesage = '';
@@ -25,9 +25,40 @@ function roomControllerFunction($scope, $stateParams, $rootScope) {
 
 		$scope.roomid = $stateParams.roomid;
 
-		console.log($rootScope.connection);
 
-	}; // init
+
+
+        $rootScope.connection.onmessage = (event)=> {
+            var message = JSON.parse(event.data);
+
+            if(message.type === $scope.MESSAGE_TYPES.text_message){
+            	var element = $('#messageList');
+            	element.html(element.html() + '<li class="list-group-item">' + message.data + '</li>');
+                $compile(element.contents())($scope);
+			} else if(message.type === $scope.MESSAGE_TYPES.user_joined){
+                //might not need....
+            	var element = $('#userList');
+                element.html(element.html() + '<li id="' + message.from + '" class="list-group-item">' + message.from + '</li>');
+                $compile(element.contents())($scope);
+			} else if(message.type === $scope.MESSAGE_TYPES.user_list){
+				console.log('IN USER LIST MESSAGE');
+				console.log(message.data);
+				var html = '';
+                var element = $('#userList');
+
+                for(var i=0;i<message.data.length; i++){
+					html += '<li id="' + message.data[i] + '" class="list-group-item">' + message.data[i] + '</li>';
+				}
+                element.html(html);
+                $compile(element.contents())($scope);
+			}
+
+        };
+
+        $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.request_user_list, $rootScope.username));
+
+
+    }; // init
 
 	$scope.pageReady = function() {
 		localVideo = document.getElementById('localVideo');
@@ -111,7 +142,7 @@ function roomControllerFunction($scope, $stateParams, $rootScope) {
 
 
 	$scope.sendMessage = function() {
-		$rootScope.connection.send("something");
+        $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.text_message, $rootScope.username, $scope.message));
 	}
 
 } // roomControllerFunction

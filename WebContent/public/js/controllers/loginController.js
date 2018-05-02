@@ -17,7 +17,6 @@ function loginControllerFunction($scope, $state, $rootScope) {
     $scope.login = function(){
         if($scope.usernameFormat()) {
             $.get('/validUser/' + $scope.loginName, (data) => {
-                console.log(data);
                 if (data.valid) {
                     $rootScope.username = $scope.loginName;
                     $state.go('lobby');

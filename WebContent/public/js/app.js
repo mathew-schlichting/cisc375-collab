@@ -34,7 +34,17 @@ collabApp.config(function($stateProvider) {
 	};
     $scope.MESSAGE_TYPES = {
         new_user: 0,
-        rooms_list: 1
+        rooms_list: 1,
+		ask_for_rooms: 2,
+        create_room: 3,
+        join_room: 4,
+        leave_room: 5,
+        user_joined: 6,
+        user_left: 7,
+        text_message: 8,
+        request_user_list: 9,
+        user_list: 10
+
     };
 
 
