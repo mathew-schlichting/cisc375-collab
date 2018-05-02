@@ -28,9 +28,6 @@ function roomControllerFunction($scope, $stateParams, $rootScope) {
 
 		console.log($rootScope.connection);
 
-	}; // init
-
-	$scope.pageReady = function() {
 		$scope.localVideo = document.getElementById('localVideo');
 		$scope.remoteVideo = document.getElementById('remoteVideo');
 
@@ -48,6 +45,7 @@ function roomControllerFunction($scope, $stateParams, $rootScope) {
 				.then(function(stream) {
 					// Success:
 					$scope.localStream = stream;
+					console.log("in pageReady; $scope.localStream = " + $scope.localStream);
 					// Older browsers may not have srcObject
 					if ("srcObject" in $scope.localVideo) {
 						$scope.localVideo.srcObject = stream;
@@ -64,10 +62,10 @@ function roomControllerFunction($scope, $stateParams, $rootScope) {
 		} else {
 			window.alert("Sorry; your browser does not support the getUserMedia API.");
 		}
-	}; // pageReady
+	}; // init
 
 	$scope.start = (isCaller) => {
-		console.log("in start! $scope.localStream = " + $scope.localStream);
+		console.log("in start! isCaller = " + isCaller);
 		peerConnection = new RTCPeerConnection($scope.peerConnectionConfig);
 		peerConnection.onicecandidate = gotIceCandidate;
 		peerConnection.onaddstream = gotRemoteStream;
