@@ -3,13 +3,30 @@
 }
 
 .chat-box {
-   background-color: #9acfea;
+    background-color: #9acfea;
+    height: 30em;
 }
+
+.message {
+    height: 3em;
+}
+
 
 #messageList {
     overflow-y: scroll;
+    height: 22em;
 }
 
 #messageChatRow {
-    height: 10em !important;
+    height: 30em !important;
+}
+
+.user-color{
+    float: left;
+    width: 1.4em;
+    height: 1.4em;
+}
+
+.user-item {
+    height: 3em;
 }

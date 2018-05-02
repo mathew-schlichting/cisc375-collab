@@ -72,10 +72,13 @@ function isValidUser(user) {
     return people[user] === undefined;
 }
 
-function createNewUser(user, ws){
-    people[user] = {username: user, room: null, ws: ws};
+function createNewUser(user, color, ws){
+    people[user] = {username: user, color: color, room: null, ws: ws};
 }
 
+function getColorFor(username){
+    return people[username].color
+}
 
 /****************************** *************************************/
 
@@ -96,7 +99,11 @@ function isCurrentRoom(roomid){
     return rooms[roomid] !== undefined
 }
 function getUserList(roomid){
-    return rooms[roomid].users;
+    var result = [];
+    for(var i=0; i<rooms[roomid].users.length; i++){
+        result.push({username: rooms[roomid].users[i], color: getColorFor(rooms[roomid].users[i])});
+    }
+    return result;
 }
 
 function joinRoom(roomid, username){
@@ -148,7 +155,7 @@ function initWebSocket(){
             message = JSON.parse(message);
             if(message.type === MESSAGE_TYPES.new_user){
                 if(isValidUser(message.from)){
-                    createNewUser(message.from, current);
+                    createNewUser(message.from, message.data, current);
                 }
             } else if(message.type === MESSAGE_TYPES.ask_for_rooms){
                 wss.sendTo(message.from, MESSAGE_TYPES.rooms_list, 'server', rooms);
@@ -161,7 +168,7 @@ function initWebSocket(){
             } else if(message.type === MESSAGE_TYPES.leave_room){
                 leaveRoom(message.from);
             } else if(message.type === MESSAGE_TYPES.text_message){
-                wss.broadcastInRoom(MESSAGE_TYPES.text_message, message.from, message.data);
+                wss.broadcastInRoom(MESSAGE_TYPES.text_message, message.from, {color: getColorFor(message.from), message: message.data});
             } else if(message.type === MESSAGE_TYPES.request_user_list){
                 wss.sendTo(message.from, MESSAGE_TYPES.user_list, 'server', getUserList(people[message.from].room));
             }

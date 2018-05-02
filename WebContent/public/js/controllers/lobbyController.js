@@ -10,7 +10,7 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 		$rootScope.connection = new WebSocket('ws://' + window.location.hostname + ':8018');
 
         $rootScope.connection.onopen = (e) => {
-            $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.new_user, $rootScope.username));
+            $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.new_user, $rootScope.username, $rootScope.color));
             $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.ask_for_rooms, $rootScope.username));
             $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.leave_room, $rootScope.username));
         };
@@ -19,7 +19,6 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 		    var data = JSON.parse(event.data);
 
             if(data.type === $scope.MESSAGE_TYPES.rooms_list){
-                console.log('loading rooms');
                 $scope.loadRooms(data.data);
 			}
 
@@ -51,7 +50,7 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
                         '<div class="col-sm-2">'+
                             'ID: ' + id +
                         '</div>'+
-                        '<div class="col-sm-2">'+
+                        '<div class="col-sm-10">'+
                             'People: ' + room.users +
                         '</div>'+
                     '</div>'+

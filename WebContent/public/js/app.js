@@ -44,15 +44,14 @@ collabApp.config(function($stateProvider) {
         text_message: 8,
         request_user_list: 9,
         user_list: 10
-
     };
 
 
     $scope.username = '';
+    $scope.color = '';
 
 
     $scope.init = function (){
-        console.log('test');
         $state.go('login');
     };
     
