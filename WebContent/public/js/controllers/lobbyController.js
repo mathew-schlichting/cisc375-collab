@@ -3,16 +3,19 @@
  */
 function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 
-
+    
 	$scope.init = function() {
 		console.log('lobby');
 
-		$rootScope.connection = new WebSocket('ws://' + window.location.hostname + ':8018');
+        if($rootScope.connection === undefined || $rootScope.connection === null) {
+            $rootScope.connection = new WebSocket('ws://' + window.location.hostname + ':8018');
+        }
+        else{
+            $scope.makeLobbyCalls();
+        }
 
         $rootScope.connection.onopen = (e) => {
-            $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.new_user, $rootScope.username, $rootScope.color));
-            $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.ask_for_rooms, $rootScope.username));
-            $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.leave_room, $rootScope.username));
+            $scope.makeLobbyCalls();
         };
 
 		$rootScope.connection.onmessage = (event)=> {
@@ -27,6 +30,13 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 		};
 
     };
+
+    $scope.makeLobbyCalls = function(){
+        $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.new_user, $rootScope.username, $rootScope.color));
+        $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.ask_for_rooms, $rootScope.username));
+        $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.leave_room, $rootScope.username));
+    };
+
 
     $scope.loadRooms = function (rooms) {
         var element = $('#roomsList');

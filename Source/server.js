@@ -112,6 +112,8 @@ function joinRoom(roomid, username){
     wss.broadcastInRoom(MESSAGE_TYPES.user_joined, username);
     wss.broadcastInLobby(MESSAGE_TYPES.rooms_list, 'server', getListOfRooms());
     wss.sendTo(username, MESSAGE_TYPES.user_list, 'server', getUserList(roomid));
+    wss.broadcastInRoom(MESSAGE_TYPES.user_list, username, getUserList(roomid));
+
 }
 function leaveRoom(username){
     var roomid = people[username].room;
@@ -119,7 +121,7 @@ function leaveRoom(username){
         var index = rooms[roomid].users.indexOf(username);
         if (index >= 0) {
             rooms[roomid].users.splice(index, 1);
-            wss.broadcastInRoom(MESSAGE_TYPES.user_left, username);
+            wss.broadcastInRoom(MESSAGE_TYPES.user_list, username, getUserList(roomid));
             wss.broadcastInLobby({type:MESSAGE_TYPES.rooms_list, from: 'server', data: getListOfRooms()});
         }
         people[username].room = null;

@@ -45,11 +45,8 @@ function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
 				$compile(element.contents())($scope);
 
 
-			} else if (message.type === $scope.MESSAGE_TYPES.user_joined) {
-				//might not need....
-				var element = $('#userList');
-				element.html(element.html() + '<li id="' + message.from + '" class="list-group-item">' + message.from + '</li>');
-				$compile(element.contents())($scope);
+			} else if(message.type === $scope.MESSAGE_TYPES.user_joined){
+            	//create calls todo
 
 			} else if (message.type === $scope.MESSAGE_TYPES.user_list) {
 				var html = '';
