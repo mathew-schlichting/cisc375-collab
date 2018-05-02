@@ -8,6 +8,7 @@ function roomControllerFunction($scope, $stateParams, $rootScope) {
 
 	$scope.localVideo;
 	$scope.remoteVideo;
+	$scope.localStream;
 	$scope.peerConnection;
 	$scope.peerConnectionConfig = {
 		'iceServers': [{
@@ -30,8 +31,8 @@ function roomControllerFunction($scope, $stateParams, $rootScope) {
 	}; // init
 
 	$scope.pageReady = function() {
-		localVideo = document.getElementById('localVideo');
-		remoteVideo = document.getElementById('remoteVideo');
+		$scope.localVideo = document.getElementById('localVideo');
+		$scope.remoteVideo = document.getElementById('remoteVideo');
 
 		serverConnection = new WebSocket('ws://' + window.location.hostname + ':8018');
 		serverConnection.onmessage = gotMessageFromServer; // TODO - rename this when actually connected
@@ -42,72 +43,85 @@ function roomControllerFunction($scope, $stateParams, $rootScope) {
 		};
 
 		// TODO - this is the part that we need to test to make sure that adapterjs is working correctly:
-		if (navigator.getUserMedia) {
-			navigator.getUserMedia(constraints, (stream) => {
-				// Success:
-				localStream = stream;
-				localVideo.src = window.URL.createObjectURL(stream);
-			}, (error) => {
-				console.log(error);
-			});
+		if (navigator.mediaDevices.getUserMedia) {
+			navigator.mediaDevices.getUserMedia(constraints)
+				.then(function(stream) {
+					// Success:
+					$scope.localStream = stream;
+					// Older browsers may not have srcObject
+					if ("srcObject" in $scope.localVideo) {
+						$scope.localVideo.srcObject = stream;
+					} else {
+						// Avoid using this in new browsers, as it is going away.
+						$scope.localVideo.src = window.URL.createObjectURL(stream);
+					}
+					console.log("getUserMedia success: $scope.localStream = " + stream);
+					//		$scope.localVideo.src = window.URL.createObjectURL(stream);
+				})
+				.catch(function(error) {
+					console.log(error);
+				});
 		} else {
 			window.alert("Sorry; your browser does not support the getUserMedia API.");
 		}
-
-		function start(isCaller) {
-			peerConnection = new RTCPeerConnection($scope.peerConnectionConfig);
-			peerConnection.onicecandidate = gotIceCandidate;
-			peerConnection.onaddstream = gotRemoteStream;
-			peerConnection.addStream($scope.localStream);
-
-			if (isCaller) {
-				peerConnection.createOffer(gotDescription, createOfferError);
-			}
-		}
-
-		function gotDescription(description) {
-			console.log('got description');
-			peerConnection.setLocalDescription(description, function() {
-				serverConnection.send(JSON.stringify({
-					'sdp': description
-				}));
-			}, function() {
-				console.log('set description error')
-			});
-		}
-
-		function gotIceCandidate(event) {
-			if (event.candidate != null) {
-				serverConnection.send(JSON.stringify({
-					'ice': event.candidate
-				}));
-			}
-		}
-
-		function gotRemoteStream(event) {
-			console.log('got remote stream');
-			remoteVideo.src = window.URL.createObjectURL(event.stream);
-		}
-
-		function createOfferError(error) {
-			console.log(error);
-		}
-
-		function gotMessageFromServer(message) {
-			if (!peerConnection) start(false);
-
-			var signal = JSON.parse(message.data);
-			if (signal.sdp) {
-				peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp), function() {
-					if (signal.sdp.type == 'offer') {
-						peerConnection.createAnswer(gotDescription, createAnswerError);
-					}
-				});
-			} else if (signal.ice) {
-				peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice));
-			}
-		}
 	}; // pageReady
+
+	$scope.start = (isCaller) => {
+		console.log("in start! $scope.localStream = " + $scope.localStream);
+		peerConnection = new RTCPeerConnection($scope.peerConnectionConfig);
+		peerConnection.onicecandidate = gotIceCandidate;
+		peerConnection.onaddstream = gotRemoteStream;
+		peerConnection.addStream($scope.localStream);
+
+		if (isCaller) {
+			peerConnection.createOffer(gotDescription, createOfferError);
+		}
+	};
+
+
+
+	function gotDescription(description) {
+		console.log('got description');
+		peerConnection.setLocalDescription(description, function() {
+			serverConnection.send(JSON.stringify({
+				'sdp': description
+			}));
+		}, function() {
+			console.log('set description error')
+		});
+	}
+
+	function gotIceCandidate(event) {
+		if (event.candidate != null) {
+			serverConnection.send(JSON.stringify({
+				'ice': event.candidate
+			}));
+		}
+	}
+
+	function gotRemoteStream(event) {
+		console.log('got remote stream');
+		$scope.remoteVideo.src = window.URL.createObjectURL(event.stream);
+	}
+
+	function createOfferError(error) {
+		console.log(error);
+	}
+
+	function gotMessageFromServer(message) {
+		if (!peerConnection) start(false);
+
+		var signal = JSON.parse(message.data);
+		if (signal.sdp) {
+			peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp), function() {
+				if (signal.sdp.type == 'offer') {
+					peerConnection.createAnswer(gotDescription, createAnswerError);
+				}
+			});
+		} else if (signal.ice) {
+			peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice));
+		}
+	}
 
 
 	$scope.sendMessage = function() {
