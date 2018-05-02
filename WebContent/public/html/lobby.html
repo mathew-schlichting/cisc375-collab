@@ -11,21 +11,8 @@
 
     <div class="row">
         <div class="col-lg-6 col-lg-offset-3">
-            <ul class="list-group">
-                <li id="1111" class="list-group-item" ng-click="joinRoom(1111);">
-                    <div class="row">
-                        <div class="col-sm-2">
-                            ID: 1111
-                        </div>
-                        <div class="col-sm-2">
-                            People 10/20
-                        </div>
-                    </div>
-                </li>
-
-                <li class="list-group-item">
-                    <button class="btn btn-success full-size" ng-click="createRoom()">Create Room</button>
-                </li>
+            <ul id="roomsList" class="list-group">
+                <!-- Loaded on page load from server -->
             </ul>
         </div>
 

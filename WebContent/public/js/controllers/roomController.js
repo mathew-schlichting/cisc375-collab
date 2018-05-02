@@ -1,7 +1,7 @@
 /**
  * Created by Mathew on 4/30/2018.
  */
-function roomControllerFunction($scope, $stateParams, $rootScope) {
+function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
 
 	$scope.roomid = '0001';
 	$scope.meesage = '';
@@ -26,10 +26,53 @@ function roomControllerFunction($scope, $stateParams, $rootScope) {
 
 		$scope.roomid = $stateParams.roomid;
 
-		console.log($rootScope.connection);
 
-		$scope.localVideo = document.getElementById('localVideo');
-		$scope.remoteVideo = document.getElementById('remoteVideo');
+
+
+		$rootScope.connection.onmessage = (event) => {
+			var message = JSON.parse(event.data);
+
+			if (message.type === $scope.MESSAGE_TYPES.text_message) {
+
+				var element = $('#messageList');
+				element.html(element.html() + '<li class="list-group-item message"><div id="temp-color" class="user-color"></div><div class="pull-right">' + message.data.message + '</div></li>');
+				$compile(element.contents())($scope);
+
+				element = $('#temp-color');
+				element.css('border-radius', '50%');
+				element.css('background-color', message.data.color);
+				element.attr('id', '');
+				$compile(element.contents())($scope);
+
+
+			} else if (message.type === $scope.MESSAGE_TYPES.user_joined) {
+				//might not need....
+				var element = $('#userList');
+				element.html(element.html() + '<li id="' + message.from + '" class="list-group-item">' + message.from + '</li>');
+				$compile(element.contents())($scope);
+
+			} else if (message.type === $scope.MESSAGE_TYPES.user_list) {
+				var html = '';
+				var element = $('#userList');
+
+				for (var i = 0; i < message.data.length; i++) {
+					html += '<li id="' + message.data[i].username + '" class="list-group-item user-item"><div id="' + message.data[i].username + '-color" class="user-color"></div><div>' + message.data[i].username + '</div></li>';
+				}
+				element.html(html);
+				$compile(element.contents())($scope);
+
+				for (i = 0; i < message.data.length; i++) {
+					element = $('#' + message.data[i].username + '-color');
+					element.css('border-radius', '50%');
+					element.css('background-color', message.data[i].color);
+					$compile(element.contents())($scope);
+				}
+			}
+
+
+		};
+
+		$rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.request_user_list, $rootScope.username));
 
 		serverConnection = new WebSocket('ws://' + window.location.hostname + ':8018');
 		serverConnection.onmessage = gotMessageFromServer; // TODO - rename this when actually connected
@@ -123,7 +166,8 @@ function roomControllerFunction($scope, $stateParams, $rootScope) {
 
 
 	$scope.sendMessage = function() {
-		$rootScope.connection.send("something");
+		$rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.text_message, $rootScope.username, $scope.message));
+		$scope.message = '';
 	}
 
 } // roomControllerFunction
