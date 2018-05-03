@@ -19,7 +19,6 @@ const port = '8018';
 const app = express();
 const server = http.createServer(app);
 const io = SocketIO(server);
-var wss = null;
 const public_dir = path.join(__dirname, '../WebContent/public');
 
 
@@ -27,19 +26,7 @@ const public_dir = path.join(__dirname, '../WebContent/public');
 /* Application Variables */
 const rooms = {};
 const people = {};
-const MESSAGE_TYPES = {
-	new_user: 0,
-	rooms_list: 1,
-	ask_for_rooms: 2,
-	create_room: 3,
-	join_room: 4,
-	leave_room: 5,
-	user_joined: 6,
-	user_left: 7,
-	text_message: 8,
-	request_user_list: 9,
-	user_list: 10
-};
+
 
 
 String.prototype.replaceAll = function(search, replacement) {
@@ -241,73 +228,15 @@ function initSocketIO() {
 			});
 		});
 
-		client.on('leave_room', (message) => {
-			console.log('Received leave_room');
-			leaveRoom(message.from);
-		});
-
-
-
-
-
-
-
-
-		client.emit('init_client', createMessage('server', {
-			id: currentId
-		}));
-	});
+        client.on('leave_room', (message) => {
+            console.log('Received leave_room');
+            leaveRoom(message.from);
+        });
+        
+        client.emit('init_client', createMessage('server', {id: currentId}));
+    });
 
 	console.log('Created SocketIO');
-}
-
-
-
-
-
-
-
-function initWebSocket() {
-	wss = new WebSocket.Server({
-		server: server
-	});
-
-	wss.on('connection', (client) => {
-		var current = client;
-
-		client.on('message', (message) => {
-			// Broadcast any received message to all clients
-			console.log('received: %s', message);
-			message = JSON.parse(message);
-			if (message.type === MESSAGE_TYPES.new_user) {
-				if (isValidUser(message.from)) {
-					createNewUser(message.from, message.data, current);
-				}
-			} else if (message.type === MESSAGE_TYPES.ask_for_rooms) {
-				sendToUser(message.from, MESSAGE_TYPES.rooms_list, 'server', rooms);
-			} else if (message.type === MESSAGE_TYPES.create_room) {
-				if (!isCurrentRoom(message.data)) {
-					createNewRoom(message.data);
-				}
-			} else if (message.type === MESSAGE_TYPES.join_room) {
-				joinRoom(message.data, message.from);
-			} else if (message.type === MESSAGE_TYPES.leave_room) {
-				leaveRoom(message.from);
-			} else if (message.type === MESSAGE_TYPES.text_message) {
-				broadcastInRoom(MESSAGE_TYPES.text_message, message.from, {
-					color: getColorFor(message.from),
-					message: message.data
-				});
-			} else if (message.type === MESSAGE_TYPES.request_user_list) {
-				sendToUser(message.from, MESSAGE_TYPES.user_list, 'server', getUserList(people[message.from].room));
-			} else {
-				// fail gracefully
-			}
-		});
-	});
-
-
-	console.log('Created Websocket Server')
 }
 
 init();
