@@ -3,47 +3,57 @@
  */
 function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 
-    
+    $scope.rooms = [{id: 'boi', users: ['test']}];
+
 	$scope.init = function() {
-		console.log('lobby');
 
-        if($rootScope.connection === undefined || $rootScope.connection === null) {
-            $rootScope.connection = new WebSocket('ws://' + window.location.hostname + ':8018');
-        }
-        else{
-            $scope.makeLobbyCalls();
+		if($rootScope.socket === undefined) {
+            $rootScope.socket = io();
         }
 
-        $rootScope.connection.onopen = (e) => {
+
+		if(!$rootScope.socket.hasListeners('init_client')) {
+            $rootScope.socket.on('init_client', (message) => {
+                $scope.send('init_response', {color: $rootScope.color, id: message.data.id});
+                $scope.makeLobbyCalls();
+                $rootScope.initialized = true;
+            });
+        }
+
+        if(!$rootScope.socket.hasListeners('rooms_list')) {
+            $rootScope.socket.on('rooms_list', (message) => {
+                console.log('loading rooms');
+                $scope.loadRooms(message.data);
+            });
+        }
+
+        if($rootScope.initialized){
             $scope.makeLobbyCalls();
-        };
-
-		$rootScope.connection.onmessage = (event)=> {
-		    var data = JSON.parse(event.data);
-
-            if(data.type === $scope.MESSAGE_TYPES.rooms_list){
-                $scope.loadRooms(data.data);
-			}
-
-			console.log(data);
-			//todo
-		};
-
+        }
     };
 
     $scope.makeLobbyCalls = function(){
-        $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.new_user, $rootScope.username, $rootScope.color));
-        $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.ask_for_rooms, $rootScope.username));
-        $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.leave_room, $rootScope.username));
+        $scope.send('leave_room');
+        $scope.send('request_rooms', {});
     };
 
 
     $scope.loadRooms = function (rooms) {
-        var element = $('#roomsList');
-        element.html($scope.createRoomsList(rooms));
-        $compile(element.contents())($scope);
+        $scope.rooms = [];
+        for(r in rooms){
+            $scope.rooms.push({id: r, users: rooms[r].users});
+        }
+
+
+        //var element = $('#roomsList');
+        //element.html($scope.createRoomsList(rooms));
+        //$compile(element.contents())($scope);
     };
 
+    $scope.createRooms = function(rooms) {
+        console.log(rooms);
+        return rooms;
+    };
 
     $scope.createRoomsList = function(rooms) {
         var html = '';
@@ -55,20 +65,11 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
     };
 
     $scope.createRoomTile = function(id, room){
-        return  '<li id="' + id + '" class="list-group-item" ng-click="joinRoom(' + id + ');">'+
-                    '<div class="row">'+
-                        '<div class="col-sm-2">'+
-                            'ID: ' + id +
-                        '</div>'+
-                        '<div class="col-sm-10">'+
-                            'People: ' + room.users +
-                        '</div>'+
-                    '</div>'+
-                '</li>';
+        return  '<li id="' + id + '" class="list-group-item" ng-click="joinRoom(' + id + ');"><div class="row"><div class="col-sm-2">ID: ' + id + '</div><div class="col-sm-10">People: ' + room.users + '</div></div></li>';
     };
 
     $scope.joinRoom = function (id) {
-        $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.join_room, $rootScope.username, id));
+        $scope.send('join_room', {roomid: id});
         $state.go('room', {roomid: id});
     };
 
@@ -77,7 +78,7 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 
         $.get('/validRoom/' + id, (data) =>{
             if(data.valid){
-                $rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.create_room, $rootScope.username, id));
+                $scope.send('create_room', {roomid: id});
                 $scope.joinRoom(id);
             }
             else{

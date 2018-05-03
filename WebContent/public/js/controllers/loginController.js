@@ -9,14 +9,14 @@ function loginControllerFunction($scope, $state, $rootScope) {
 
 
     $scope.init = function(){
-        console.log('login');
-        
+
 
     };
     
     
 
     $scope.login = function(){
+        $scope.loginName = $scope.loginName.trim();
         if($scope.usernameFormat($scope.loginName)) {
             $.get('/validUser/' + $scope.loginName, (data) => {
                 if (data.valid) {
@@ -36,7 +36,7 @@ function loginControllerFunction($scope, $state, $rootScope) {
 
 
     $scope.usernameFormat = function(s){
-        return $scope.isAlphaNumeric(s);
+        return $scope.isAlphaNumeric(s) && s !== 'server';
     };
 
 
