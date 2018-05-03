@@ -3,7 +3,7 @@
  */
 function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 
-    $scope.rooms = [];//[{id: 'boi', users: ['test']}];
+    $scope.rooms = [];
 
 	$scope.init = function() {
 
@@ -40,13 +40,11 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 
     $scope.loadRooms = function (rooms) {
         $scope.rooms = [];
-        for(r in rooms){
+        
+        for(var r in rooms){
             $scope.rooms.push({id: r, users: rooms[r].users});
         }
         
-        console.log($scope.rooms);
-
-
         //var element = $('#roomsList');
         //element.html($scope.createRoomsList(rooms));
         //$compile(element.contents())($scope);
