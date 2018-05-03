@@ -14,7 +14,10 @@
             <ul id="roomsList" class="list-group">
                 <!-- Loaded on page load from server -->
 
-                <li ng-repeat="room in rooms" id="{{room.id}}" class="list-group-item" ng-click="joinRoom({{room.id}});">
+
+                <!-- <li ng-repeat="room in rooms" id="{{room.id}}" class="list-group-item" ng-click="joinRoom({{room.id}});"> -->
+
+                <li ng-repeat="room in rooms" class="list-group-item">
                     <div class="row">
                         <div class="col-sm-2">
                             ID: {{room.id}}
