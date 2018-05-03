@@ -13,6 +13,24 @@
         <div class="col-lg-6 col-lg-offset-3">
             <ul id="roomsList" class="list-group">
                 <!-- Loaded on page load from server -->
+
+                <li ng-repeat="room in rooms" id="{{room.id}}" class="list-group-item" ng-click="joinRoom({{room.id}});">
+                    <div class="row">
+                        <div class="col-sm-2">
+                            ID: {{room.id}}
+                        </div>
+                        <div class="col-sm-10">
+                            People: {{room.users}}
+                        </div>
+                    </div>
+                </li>
+
+
+                <li class="list-group-item">
+                    <button class="btn btn-success full-size" ng-click="createRoom()">
+                        Create Room
+                    </button>
+                </li>
             </ul>
         </div>
 

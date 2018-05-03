@@ -30,55 +30,24 @@ function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
 
 
 	$scope.init = function() {
-		console.log('room');
-
 		$scope.roomid = $stateParams.roomid;
 
 
-		$rootScope.connection.onmessage = (event) => {
-			var message = JSON.parse(event.data);
+		$scope.send('request_users');
 
-			if (message.type === $scope.MESSAGE_TYPES.text_message) {
+		if (!$rootScope.socket.hasListeners('user_list')) {
+			$rootScope.socket.on('user_list', (message) => {
+				$scope.receivedUserList(message.data);
+			});
+		}
 
-				var element = $('#messageList');
-				element.html(element.html() + '<li class="list-group-item message"><div id="temp-color" class="user-color"></div><div class="pull-right">' + message.data.message + '</div></li>');
-				$compile(element.contents())($scope);
-
-				element = $('#temp-color');
-				element.css('border-radius', '50%');
-				element.css('background-color', message.data.color);
-				element.attr('id', '');
-				$compile(element.contents())($scope);
-
-
-			} else if (message.type === $scope.MESSAGE_TYPES.user_joined) {
-				//might not need....
-				var element = $('#userList');
-				element.html(element.html() + '<li id="' + message.from + '" class="list-group-item">' + message.from + '</li>');
-				$compile(element.contents())($scope);
-
-			} else if (message.type === $scope.MESSAGE_TYPES.user_list) {
-				var html = '';
-				var element = $('#userList');
-
-				for (var i = 0; i < message.data.length; i++) {
-					html += '<li id="' + message.data[i].username + '" class="list-group-item user-item"><div id="' + message.data[i].username + '-color" class="user-color"></div><div>' + message.data[i].username + '</div></li>';
-				}
-				element.html(html);
-				$compile(element.contents())($scope);
-
-				for (i = 0; i < message.data.length; i++) {
-					element = $('#' + message.data[i].username + '-color');
-					element.css('border-radius', '50%');
-					element.css('background-color', message.data[i].color);
-					$compile(element.contents())($scope);
-				}
-			}
+		if (!$rootScope.socket.hasListeners('text_message')) {
+			$rootScope.socket.on('text_message', (message) => {
+				$scope.receivedTextMessage(message.data.message, message.data.color);
+			});
+		}
 
 
-		};
-
-		$rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.request_user_list, $rootScope.username));
 
 		$scope.serverConnection = new WebSocket('ws://' + window.location.hostname + ':8018');
 		// TODO - the following line will change drastically with socket.io:
@@ -174,73 +143,76 @@ function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
 
 	$scope.start = (isCaller) => {
 		console.log("start functionality coming soon!");
+        /*
+        			if (isCaller) {
+        				$scope.peerConnection.createOffer(gotDescription, createOfferError);
+        			}
+        		};
+    */
+
+	$scope.receivedUserList = function(list) {
+		var html = '';
+		var element = $('#userList');
+
+		for (var i = 0; i < list.length; i++) {
+			html += '<li id="' + list[i].username + '" class="list-group-item user-item"><div id="' + list[i].username + '-color" class="user-color"></div><div>' + list[i].username + '</div></li>';
+		}
+		element.html(html);
+		$compile(element.contents())($scope);
+
+		for (i = 0; i < list.length; i++) {
+			element = $('#' + list[i].username + '-color');
+			element.css('border-radius', '50%');
+			element.css('background-color', list[i].color);
+			$compile(element.contents())($scope);
+		}
 	};
 
-*/
-	/*************** Attempts to send that video/display others *****************/
+	$scope.receivedTextMessage = function(message, color) {
+		var element = $('#messageList');
+		element.html(element.html() + '<li class="list-group-item message"><div id="temp-color" class="user-color"></div><div class="pull-right">' + message + '</div></li>');
+		$compile(element.contents())($scope);
+
+		element = $('#temp-color');
+		element.css('border-radius', '50%');
+		element.css('background-color', color);
+		element.attr('id', '');
+		$compile(element.contents())($scope);
+	};
+
 	/*
-			$scope.peerConnection = new RTCPeerConnection($scope.peerConnectionConfig);
-			console.log($scope.peerConnection);
-			try {
-				$scope.peerConnection.onicecandidate = gotIceCandidate;
-			} catch (error) {
-				console.log(error);
-			}
-			try {
-				//$scope.peerConnection.onaddstream = gotRemoteStream;
-				$scope.peerConnection.ontrack = gotRemoteStream;
-			} catch (error) {
-				console.log(error);
-			}
-			try {
-				console.log(" --- trying to add the stream --- ");
-				//$scope.peerConnection.addStream($scope.localStream);
-				$scope.localStream.getTracks().forEach(function(track) {
-					$scope.peerConnection.addTrack(track, $scope.localStream);
-				});
-				console.log($scope.peerConnection.getLocalStreams());
-			} catch (error) {
-				console.log(error);
-			}
+	function gotDescription(description) {
+		console.log('got description');
+		$scope.peerConnection.setLocalDescription(description, function() {
+			$scope.serverConnection.send(JSON.stringify({
+				'sdp': description
+			}));
+		}, function() {
+			console.log('set description error')
+		});
+	}
 
-			if (isCaller) {
-				$scope.peerConnection.createOffer(gotDescription, createOfferError);
-			}
-		};
-
-
-
-		function gotDescription(description) {
-			console.log('got description');
-			$scope.peerConnection.setLocalDescription(description, function() {
-				$scope.serverConnection.send(JSON.stringify({
-					'sdp': description
-				}));
-			}, function() {
-				console.log('set description error')
-			});
+	function gotIceCandidate(event) {
+		if (event.candidate != null) {
+			console.log(event.candidate);
+			$scope.serverConnection.send(JSON.stringify({
+				'ice': event.candidate
+			}));
 		}
+	}
 
-		function gotIceCandidate(event) {
-			if (event.candidate != null) {
-				console.log(event.candidate);
-				$scope.serverConnection.send(JSON.stringify({
-					'ice': event.candidate
-				}));
-			}
-		}
+	function gotRemoteStream(event) {
+		console.log('got remote stream');
+		console.log(event);
+		$scope.remoteVideo.src = window.URL.createObjectURL(event.stream);
+		console.log($scope.remoteVideo);
+	}
 
-		function gotRemoteStream(event) {
-			console.log('got remote stream');
-			console.log(event);
-			$scope.remoteVideo.src = window.URL.createObjectURL(event.stream);
-			console.log($scope.remoteVideo);
-		}
+	function createOfferError(error) {
+		console.log(error);
+	}
+	*/
 
-		function createOfferError(error) {
-			console.log(error);
-		}
-*/
 	function gotMessageFromServer(message) {
 		if (!$scope.peerConnection) start(false);
 
@@ -258,7 +230,9 @@ function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
 
 
 	$scope.sendMessage = function() {
-		$rootScope.connection.send($scope.createMessage($scope.MESSAGE_TYPES.text_message, $rootScope.username, $scope.message));
+		$scope.send('text_message', {
+			message: $scope.message
+		});
 		$scope.message = '';
 	}
 

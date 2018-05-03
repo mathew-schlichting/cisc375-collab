@@ -12,11 +12,13 @@ const favicon = require('serve-favicon');
 const bodyParser = require('body-parser');
 const WebSocket = require('ws');
 const http = require('http');
+const SocketIO = require('socket.io');
 
 /* Server Variables */
 const port = '8018';
 const app = express();
 const server = http.createServer(app);
+const io = SocketIO(server);
 var wss = null;
 const public_dir = path.join(__dirname, '../WebContent/public');
 
@@ -51,7 +53,8 @@ function init() {
 	console.log('Now listening on port: ', port);
 	server.listen(port);
 
-	initWebSocket();
+	initSocketIO();
+	//initWebSocket();
 }
 
 
@@ -76,12 +79,12 @@ function isValidUser(user) {
 	return people[user] === undefined;
 }
 
-function createNewUser(user, color, ws) {
+function createNewUser(user, color, client) {
 	people[user] = {
 		username: user,
 		color: color,
 		room: null,
-		ws: ws
+		client: client
 	};
 }
 
@@ -112,11 +115,13 @@ function isCurrentRoom(roomid) {
 
 function getUserList(roomid) {
 	var result = [];
-	for (var i = 0; i < rooms[roomid].users.length; i++) {
-		result.push({
-			username: rooms[roomid].users[i],
-			color: getColorFor(rooms[roomid].users[i])
-		});
+	if (roomid !== null) {
+		for (var i = 0; i < rooms[roomid].users.length; i++) {
+			result.push({
+				username: rooms[roomid].users[i],
+				color: getColorFor(rooms[roomid].users[i])
+			});
+		}
 	}
 	return result;
 }
@@ -124,9 +129,11 @@ function getUserList(roomid) {
 function joinRoom(roomid, username) {
 	rooms[roomid].users.push(username);
 	people[username].room = roomid;
-	wss.broadcastInRoom(MESSAGE_TYPES.user_joined, username);
-	wss.broadcastInLobby(MESSAGE_TYPES.rooms_list, 'server', getListOfRooms());
-	wss.sendTo(username, MESSAGE_TYPES.user_list, 'server', getUserList(roomid));
+	broadcastInRoom(roomid, 'user_joined', 'server', {
+		username: username
+	});
+	broadcastInLobby('rooms_list', 'server', getListOfRooms());
+	broadcastInRoom(roomid, 'user_list', 'server', getUserList(roomid));
 }
 
 function leaveRoom(username) {
@@ -135,12 +142,8 @@ function leaveRoom(username) {
 		var index = rooms[roomid].users.indexOf(username);
 		if (index >= 0) {
 			rooms[roomid].users.splice(index, 1);
-			wss.broadcastInRoom(MESSAGE_TYPES.user_left, username);
-			wss.broadcastInLobby({
-				type: MESSAGE_TYPES.rooms_list,
-				from: 'server',
-				data: getListOfRooms()
-			});
+			broadcastInRoom(roomid, 'user_list', 'server', getUserList(roomid));
+			broadcastInLobby('rooms_list', 'server', getListOfRooms());
 		}
 		people[username].room = null;
 	}
@@ -150,7 +153,7 @@ function createNewRoom(roomid) {
 	rooms[roomid] = {
 		users: []
 	};
-	wss.broadcastInLobby(MESSAGE_TYPES.rooms_list, 'server', getListOfRooms());
+	broadcastInLobby('rooms_list', 'server', getListOfRooms());
 }
 
 /*************************************** ****************************/
@@ -160,24 +163,119 @@ function createNewRoom(roomid) {
 
 /******************** Websocket Stuff *****************************/
 
+function broadcastInLobby(type, from, data) {
+	for (var p in people) {
+		if (people[p].client.readyState === WebSocket.OPEN && people[p].room === null) {
+			sendData(people[p].client, type, from, data);
+		}
+	}
+}
 
-function createMessage(type, from, data) {
-	return JSON.stringify({
-		type: type,
+function broadcastInRoom(roomid, type, from, data) {
+	for (var p in people) {
+		if (people[p].client.connected && people[p].room === roomid) {
+			sendData(people[p].client, type, from, data);
+		}
+	}
+}
+
+function sendToUser(id, type, from, data) {
+	if (people[id].client.connected) {
+		sendData(people[id].client, type, from, data);
+	}
+}
+
+function createMessage(from, data) {
+	return {
 		from: from,
 		data: data
-	});
+	}; //JSON.stringify({from: from, data: data});
 }
+
+function sendData(client, type, from, data) {
+	client.emit(type, createMessage(from, data));
+}
+
+
+
+function initSocketIO() {
+	var tempClients = {};
+	var temp;
+	var currentId;
+
+	io.on('connection', (client) => {
+		temp = client;
+		currentId = Math.floor(Math.random() * 1000);
+		tempClients[currentId] = client;
+
+		client.on('init_response', (message) => {
+			console.log('Received init_response');
+			createNewUser(message.from, message.data.color, tempClients[message.data.id]);
+		});
+
+		client.on('request_rooms', (message) => {
+			console.log('Received request_rooms');
+			sendData(people[message.from].client, 'rooms_list', 'server', getListOfRooms());
+		});
+
+		client.on('join_room', (message) => {
+			console.log('Received join_room');
+			joinRoom(message.data.roomid, message.from);
+		});
+
+		client.on('create_room', (message) => {
+			console.log('Received create_room');
+			createNewRoom(message.data.roomid);
+		});
+
+		client.on('request_users', (message) => {
+			console.log('Received request_users');
+			sendToUser(message.from, 'user_list', 'server', getUserList(people[message.from].room));
+		});
+
+		client.on('text_message', (message) => {
+			console.log('Received text_message');
+			broadcastInRoom(people[message.from].room, 'text_message', message.from, {
+				message: message.data.message,
+				color: people[message.from].color
+			});
+		});
+
+		client.on('leave_room', (message) => {
+			console.log('Received leave_room');
+			leaveRoom(message.from);
+		});
+
+
+
+
+
+
+
+
+		client.emit('init_client', createMessage('server', {
+			id: currentId
+		}));
+	});
+
+	console.log('Created SocketIO');
+}
+
+
+
+
+
+
 
 function initWebSocket() {
 	wss = new WebSocket.Server({
 		server: server
 	});
 
-	wss.on('connection', (ws) => {
-		var current = ws;
+	wss.on('connection', (client) => {
+		var current = client;
 
-		ws.on('message', (message) => {
+		client.on('message', (message) => {
 			// Broadcast any received message to all clients
 			console.log('received: %s', message);
 			message = JSON.parse(message);
@@ -186,7 +284,7 @@ function initWebSocket() {
 					createNewUser(message.from, message.data, current);
 				}
 			} else if (message.type === MESSAGE_TYPES.ask_for_rooms) {
-				wss.sendTo(message.from, MESSAGE_TYPES.rooms_list, 'server', rooms);
+				sendToUser(message.from, MESSAGE_TYPES.rooms_list, 'server', rooms);
 			} else if (message.type === MESSAGE_TYPES.create_room) {
 				if (!isCurrentRoom(message.data)) {
 					createNewRoom(message.data);
@@ -196,49 +294,20 @@ function initWebSocket() {
 			} else if (message.type === MESSAGE_TYPES.leave_room) {
 				leaveRoom(message.from);
 			} else if (message.type === MESSAGE_TYPES.text_message) {
-				wss.broadcastInRoom(MESSAGE_TYPES.text_message, message.from, {
+				broadcastInRoom(MESSAGE_TYPES.text_message, message.from, {
 					color: getColorFor(message.from),
 					message: message.data
 				});
 			} else if (message.type === MESSAGE_TYPES.request_user_list) {
-				wss.sendTo(message.from, MESSAGE_TYPES.user_list, 'server', getUserList(people[message.from].room));
+				sendToUser(message.from, MESSAGE_TYPES.user_list, 'server', getUserList(people[message.from].room));
 			} else {
 				// fail gracefully
 			}
 		});
 	});
 
-	wss.sendTo = function(id, type, from, data) {
-		for (var p in people) {
-			if (people[p].ws.readyState === WebSocket.OPEN && p === id) {
-				sendData(people[p].ws, type, from, data);
-			}
-		}
-	};
-
-	wss.broadcastInRoom = function(type, from, data) {
-		for (var p in people) {
-			if (people[p].ws.readyState === WebSocket.OPEN && people[from].room === people[p].room) {
-				sendData(people[p].ws, type, from, data);
-			}
-		}
-	};
-
-	wss.broadcastInLobby = function(type, from, data) {
-		for (var p in people) {
-			if (people[p].ws.readyState === WebSocket.OPEN && people[p].room === null) {
-				console.log('Sending: ', data, ' to ', p);
-				sendData(people[p].ws, type, from, data);
-			}
-		}
-	};
-
 
 	console.log('Created Websocket Server')
-}
-
-function sendData(ws, type, from, data) {
-	ws.send(createMessage(type, from, data));
 }
 
 init();

@@ -24,12 +24,11 @@ collabApp.config(function($stateProvider) {
 		})
 
 
-}).controller("appCtrl", function($scope, $state, $stateParams) {
+}).controller("appCtrl", function($scope, $state, $stateParams, $rootScope) {
 
 	$scope.connection = null;
 
 	$scope.init = function() {
-		console.log('test');
 		$state.go('login');
 	};
     $scope.MESSAGE_TYPES = {
@@ -55,8 +54,13 @@ collabApp.config(function($stateProvider) {
         $state.go('login');
     };
     
-    $scope.createMessage = function (typeValue, fromValue, dataValue){
-        return JSON.stringify({type: typeValue, from: fromValue, data: dataValue});
-    }
+    $scope.createMessage = function (data){
+        return {from: $rootScope.username, data: data};
+    };
+
+    $scope.send = function(type, data) {
+        $rootScope.socket.emit(type, $scope.createMessage(data));
+    };
+
 
 });
