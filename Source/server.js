@@ -152,7 +152,7 @@ function createNewRoom(roomid) {
 
 function broadcastInLobby(type, from, data) {
 	for (var p in people) {
-		if (people[p].client.readyState === WebSocket.OPEN && people[p].room === null) {
+		if (people[p] && people[p].client !== null && people[p].client.connected && people[p].room === null) {
 			sendData(people[p].client, type, from, data);
 		}
 	}
@@ -160,7 +160,7 @@ function broadcastInLobby(type, from, data) {
 
 function broadcastInRoom(roomid, type, from, data) {
 	for (var p in people) {
-		if (people[p].client.connected && people[p].room === roomid) {
+		if (people[p] && people[p].client !== null && people[p].client.connected && people[p].room === roomid) {
 			sendData(people[p].client, type, from, data);
 		}
 	}
@@ -180,7 +180,11 @@ function createMessage(from, data) {
 }
 
 function sendData(client, type, from, data) {
-	client.emit(type, createMessage(from, data));
+	if(client === null){
+        client.emit(type, createMessage(from, data));
+    } else {
+		console.log('client is null....')
+	}
 }
 
 
@@ -236,7 +240,17 @@ function initSocketIO() {
         client.emit('init_client', createMessage('server', {id: currentId}));
     });
 
-	console.log('Created SocketIO');
+	createNewRoom(1234);
+	createNewUser( '1', 'black', null);
+	joinRoom(1234, '1');
+	createNewUser( '2', 'black', null);
+    joinRoom(1234, '2');
+    createNewUser( '3', 'black', null);
+    joinRoom(1234, '3');
+    createNewUser( '4', 'black', null);
+    joinRoom(1234, '4');
+
+    console.log('Created SocketIO');
 }
 
 init();

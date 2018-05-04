@@ -64,10 +64,10 @@ function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
         // TODO - the following line will change drastically with socket.io:
         //	$scope.serverConnection.onmessage = gotMessageFromServer; // TODO - rename this when actually connected
         //var socket = io('http://localhost:8018');
-        $rootsocket.on('connection', function (data) {
-            console.log(data);
-            socket.emit('my other event', { my: 'data' });
-        });
+        //$rootsocket.on('connection', function (data) {
+        //    console.log(data);
+        //    socket.emit('my other event', { my: 'data' });
+        //});
 
 
         /*********************** Attempts to display video of ourselves ******************/

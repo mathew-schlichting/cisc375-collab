@@ -3,13 +3,16 @@
  */
 function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 
-	$scope.rooms = []; //[{id: 'boi', users: ['test']}];
+    $scope.rooms = [];
 
 	$scope.init = function() {
 
-		if ($rootScope.socket === undefined) {
-			$rootScope.socket = io();
-		}
+        $scope.rooms = [];
+
+
+        if($rootScope.socket === undefined) {
+            $rootScope.socket = io();
+        }
 
 
 		if (!$rootScope.socket.hasListeners('init_client')) {
@@ -23,12 +26,13 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 			});
 		}
 
-		if (!$rootScope.socket.hasListeners('rooms_list')) {
-			$rootScope.socket.on('rooms_list', (message) => {
-				console.log('loading rooms');
-				$scope.loadRooms(message.data);
-			});
-		}
+        if(!$rootScope.socket.hasListeners('rooms_list')) {
+            $rootScope.socket.on('rooms_list', (message) => {
+                console.log('loading rooms');
+                $scope.loadRooms(message.data);
+                $scope.$apply()
+            });
+        }
 
 		if ($rootScope.initialized) {
 			$scope.makeLobbyCalls();
@@ -41,20 +45,15 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 	};
 
 
-	$scope.loadRooms = function(rooms) {
-		$scope.rooms = [];
-		for (r in rooms) {
-			$scope.rooms.push({
-				id: r,
-				users: rooms[r].users
-			});
-		}
-
-
-		//var element = $('#roomsList');
-		//element.html($scope.createRoomsList(rooms));
-		//$compile(element.contents())($scope);
-	};
+    $scope.loadRooms = function (rooms) {
+        for(var r in rooms){
+            $scope.rooms.push({id: r, users: rooms[r].users});
+        }
+        
+        //var element = $('#roomsList');
+        //element.html($scope.createRoomsList(rooms));
+        //$compile(element.contents())($scope);
+    };
 
 	$scope.createRooms = function(rooms) {
 		console.log(rooms);

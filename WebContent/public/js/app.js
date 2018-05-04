@@ -5,8 +5,10 @@
 
 var collabApp = angular.module("collabApp", ['ui.router']);
 
-collabApp.config(function($stateProvider) {
-	$stateProvider
+collabApp.config(function($stateProvider, $urlRouterProvider) {
+    $urlRouterProvider.otherwise('/login');
+
+    $stateProvider
 		.state('lobby', {
 			url: '/lobby',
 			templateUrl: 'html/lobby.html',
