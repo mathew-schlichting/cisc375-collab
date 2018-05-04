@@ -50,11 +50,25 @@ function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
             });
         }
 
+        if (!$rootScope.socket.hasListeners('start_call')) {
+            $rootScope.socket.on('start_call', (message) => {
+                $scope.receivedTextMessage(message.data.message, message.data.color);
+
+                // (message.from !== $rootScope.userName)
+            });
+        }
+
 
 
         //$scope.serverConnection = new WebSocket('ws://' + window.location.hostname + ':8018');
         // TODO - the following line will change drastically with socket.io:
         //	$scope.serverConnection.onmessage = gotMessageFromServer; // TODO - rename this when actually connected
+        //var socket = io('http://localhost:8018');
+        $rootsocket.on('connection', function (data) {
+            console.log(data);
+            socket.emit('my other event', { my: 'data' });
+        });
+
 
         /*********************** Attempts to display video of ourselves ******************/
 
@@ -77,6 +91,7 @@ function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
 
                     // Success:
                     $scope.localStream = stream;
+                    console.log($scope.localStream);
                     // Older browsers may not have srcObject
                     console.log($scope.localVideo);
                     if ("srcObject" in $scope.localVideo) {
@@ -100,12 +115,18 @@ function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
 
     $scope.start = (isCaller) => {
         console.log("start functionality coming soon!");
-        /*
-        			if (isCaller) {
-        				$scope.peerConnection.createOffer(gotDescription, createOfferError);
-        			}
-        		};
-    */
+
+        $scope.peerConnection = new RTCPeerConnection($scope.peerConnectionConfig);
+        $scope.peerConnection.onicecandidate = gotIceCandidate;
+        $scope.peerConnection.onaddstream = gotRemoteStream;
+        //$scope.peerConnection.addStream($scope.localStream);
+        $scope.localStream.getTracks().forEach( (track) => {
+            $scope.peerConnection.addTrack(track, $scope.localStream);
+        });
+
+        if(isCaller) {
+            $scope.peerConnection.createOffer(gotDescription, createOfferError);
+        }
     }; // start
 
     $scope.receivedUserList = function(list) {
@@ -138,7 +159,7 @@ function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
         $compile(element.contents())($scope);
     };
 
-    /*
+
     function gotDescription(description) {
     	console.log('got description');
     	$scope.peerConnection.setLocalDescription(description, function() {
@@ -169,7 +190,6 @@ function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
     function createOfferError(error) {
     	console.log(error);
     }
-    */
 
     function gotMessageFromServer(message) {
         if (!$scope.peerConnection) start(false);
