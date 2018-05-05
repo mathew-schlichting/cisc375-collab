@@ -46,13 +46,13 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
         if (!$rootScope.socket.hasListeners('text_message')) {
             $rootScope.socket.on('text_message', (message) => {
+                console.log(message);
                 $scope.receivedTextMessage(message.data.message, message.data.color);
             });
         }
 
         if (!$rootScope.socket.hasListeners('start_call')) {
             $rootScope.socket.on('start_call', (message) => {
-                $scope.receivedTextMessage(message.data.message, message.data.color);
 
                 // (message.from !== $rootScope.userName)
             });

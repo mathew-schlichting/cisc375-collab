@@ -1,80 +1,83 @@
 function canvasControllerFunction($scope, $state, $rootScope, $compile) {
 
-    $scope.paper        = null;
-    $scope.context      = null;
-    $scope.clickColor   = null;
-    $scope.clickSize    = null;
-    $scope.curTool      = null;
-    $scope.clickX       = null;
-    $scope.clickY       = null;
-    $scope.clickDrag    = null;
-    $scope.paint        = null;
-    $scope.cursize      = null;
-    $scope.curColor     = null;
+    $scope.paper = null;
+    $scope.context = null;
+    $scope.clickColor   = [];
+    $scope.clickSize    = [];
+    $scope.curTool      = 'pen';
+    $scope.clickX       = [];
+    $scope.clickY       = [];
+    $scope.clickDrag    = [];
+    $scope.paint        = false;
+    $scope.cursize      = 2;
+    $scope.curColor     = 'white';
+
+    $scope.red = 0;
+    $scope.green = 0;
+    $scope.blue = 0;
+
+    $scope.canvasLeft   = 0;
+    $scope.canvasTop    = 0;
+
+    $scope.colors = [
+        '#cb3594',
+        '#FF0000',
+        '#659b41',
+        '#ffcf33'
+    ];
 
     $scope.init = function(){
         $('.selectedColor').trigger('click');
 
-        $scope.paper        = $('#drawing');
+        $scope.paper        = $('#drawing')[0];
         $scope.context      = $scope.paper.getContext('2d');
-        $scope.clickColor   = [];
-        $scope.clickSize    = [];
-        $scope.clickX       = [];
-        $scope.clickY       = [];
-        $scope.clickDrag    = [];
+        $scope.curColor     = $scope.colors[0];
+
+        var rect = $scope.paper.getBoundingClientRect();
+        $scope.canvasLeft   = rect.left;
+        $scope.canvasTop    = rect.top;
 
 
-        // When the user clicks on the canvas:
-        // 1. Record the position in an array via the addClick function,
-        // 2. Set the boolean paint to true, and
-        // 3. Update the canvas with the function redraw.
-        $('#drawing').mousedown(function (e) {
-            var mouseX = e.pageX - this.offsetLeft;
-            var mouseY = e.pageY - this.offsetTop;
-            $scope.paint = true;
-            $scope.addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop);
-            $scope.redraw();
-            $('body').css('cursor', 'default');
-        });
-
-
-        // Continue drawing on the canvas while the user is pressing down
-        $('#drawing').mousemove(function (e) {
-            if (paint) {
-                $scope.addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, true);
-                $scope.redraw();
-                $('body').css('cursor', 'default');
-            }
-        });
-
-        // When the user if no longer clicking on the canvas, stop drawing
-        $('#drawing').mouseup(function (e) {$scope.paint = false;});
-
-        // When the user leaves the canvas, stop drawing
-        $('#drawing').mouseleave(function (e) {$scope.paint = false;});
-
-        // Colors
-        $('.color li').click(function () {
-            $(this).siblings('li').removeClass('selectedColor');
-            $(this).addClass('selectedColor');
-            $scope.curColor = $(this).children('span').attr('rel');
-        });
-
-        // Tool size
-        $('.size li').click(function () {
-            $(this).siblings('li').removeClass('selectedColor');
-            $(this).addClass('selectedColor');
-            $scope.cursize = $(this).children('span').attr('rel');
-        });
-
-        $("#erasecanvas").click(function () {$scope.curTool = "eraser";});
-        $("#pencanvas").click(function () {$scope.curTool = "";});
-
-        // Clear the canvas
-        $('#clearcanvas').click(function () {context.clearRect(0, 0, paper.width, paper.height);});
+        // adds watches to colors to update paint brush
+        $scope.$watch('red', function () {$scope.updateColorSample();});
+        $scope.$watch('green', function () {$scope.updateColorSample();});
+        $scope.$watch('blue', function () {$scope.updateColorSample();});
     };
 
-    $scope.addClick = function(c, y, dragging){
+    // credit to https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+    // clever way to convert rgb values into the hex color
+    $scope.updateColorSample = function(){
+
+        if($scope.curTool === 'eraser'){
+            $scope.red = 255;
+            $scope.green = 255;
+            $scope.blue = 255;
+            $($scope.paper).css('cursor', 'url(\'images/eraser.png\'), auto')
+        }
+        else{
+            $($scope.paper).css('cursor', 'url(\'images/pen.png\'), auto')
+        }
+
+        $('#colorSample').css('background-color', 'rgb('+$scope.red+','+$scope.green+','+$scope.blue+')');
+        $scope.curColor = '#' + ((1 << 24) + ($scope.red << 16) + ($scope.green << 8) + $scope.blue).toString(16).slice(1);
+    };
+
+    $scope.startDrawing = function(e){
+        $scope.paint = true;
+        $scope.addClick(e.clientX - $scope.canvasLeft, e.clientY - $scope.canvasTop, false);
+        $scope.redraw();
+        $('body').css('cursor', 'default');
+    };
+
+    $scope.drawMore = function(e) {
+        if ($scope.paint) {
+            $scope.addClick(e.clientX - $scope.canvasLeft, e.clientY - $scope.canvasTop, true);
+            $scope.redraw();
+            $('body').css('cursor', 'default');
+        }
+    };
+
+    $scope.addClick = function(x, y, dragging){
         $scope.clickX.push(x);
         $scope.clickY.push(y);
         $scope.clickDrag.push(dragging);
@@ -86,6 +89,56 @@ function canvasControllerFunction($scope, $state, $rootScope, $compile) {
         }
 
         $scope.clickSize.push($scope.cursize);
+    };
+
+    $scope.stopDrawing = function (){
+        $scope.paint = false;
+    };
+
+
+    $scope.changeColor = function(event, c){
+        $(event.currentTarget.parentElement.children).removeClass('selectedColor');
+        $(event.currentTarget).addClass('selectedColor');
+        $scope.curColor = $scope.colors[c];
+    };
+
+    $scope.clearCanvas = function(){
+        $scope.context.clearRect(0, 0, $scope.paper.width, $scope.paper.height);
+        $scope.clickX     = [];
+        $scope.clickY     = [];
+        $scope.clickDrag  = [];
+        $scope.clickColor = [];
+        $scope.clickSize  = [];
+    };
+
+    $scope.toPen = function(){
+        var erase = $('#erasecanvas');
+        var pen = $('#pencanvas');
+        erase.removeClass('btn-info');
+        erase.addClass('btn-default');
+        pen.removeClass('btn-default');
+        pen.addClass('btn-info');
+
+        $scope.curTool = 'pen';
+
+        $scope.red = 0;
+        $scope.green = 0;
+        $scope.blue = 0;
+    };
+
+    $scope.toEraser = function (){
+        var erase = $('#erasecanvas');
+        var pen = $('#pencanvas');
+        pen.removeClass('btn-info');
+        pen.addClass('btn-default');
+        erase.removeClass('btn-default');
+        erase.addClass('btn-info');
+
+        $scope.curTool = 'eraser';
+
+        $scope.red = 255;
+        $scope.green = 255;
+        $scope.blue = 255;
     };
 
         // Each time this function is called, the canvas records/draws the new marks

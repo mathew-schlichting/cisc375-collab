@@ -1,61 +1,18 @@
 <div ng-controller="roomCtrl" ng-init="init()">
     <div class="row">
-        <div class="col-sm-2">
+        <div class="col-md-3">
             <h3>
                 Room: {{roomid}}
             </h3>
         </div>
 
-        <video class="col-md-4 autoplay playsinline" autoplay id="localVideo">
-        </video>
-
-        <video class="col-md-10" id="remoteVideo">
-        </video>
-
-        <button class="btn btn-success" ng-click="start(true);">Start Call</button>
-    </div>
-    <!-- Drawing -->
-    <div ng-controller="canvasCtrl">
-        <div class="row">
-            <!-- Canvas -->
-            <div class="col-md-6">
-                <div id="canvasDiv">
-                    <canvas id="drawing" width="560" height="280"></canvas>
-                </div>
-            </div>
-            <!-- End Canvas -->
-            <!-- Selection Tools -->
-            <div class="col-md-6">
-                <button id="clearcanvas">Clear Canvas</button>
-                <button id="erasecanvas">Eraser</button>
-                <button id="pencanvas">Pen</button>
-
-                <div class="colordiv">
-                    Select Color
-                    <ul class="color">
-                        <li class="selectedColor"><span rel="#cb3594" >Purple</span></li>
-                        <li><span rel="#FF0000" >Red</span></li>
-                        <li><span rel="#659b41" >Green</span></li>
-                        <li><span rel="#ffcf33" >Yellow</span></li>
-
-                    </ul>
-                </div>
-
-                <div class="sizediv">
-                    Select Size
-                    <ul class="size">
-                        <li class="selectedColor"><span rel="5" >Small</span></li>
-                        <li><span rel="12" >Medium</span></li>
-                        <li><span rel="20" >Large</span></li>
-                    </ul>
-                </div>
-            </div>
-            <!-- End Selection Tools -->
+        <div class="col-md-2">
+            <button class="btn btn-success" ng-click="start(true);">Start Call</button>
         </div>
     </div>
-    <!-- End Drawing -->
+
     <div class="row">
-        <div class="col-md-1 text-center">
+        <div class="col-md-3 text-center">
             <h4 class=" full-size text-center">
                 Users:
             </h4>
@@ -65,10 +22,20 @@
         <div class="col-md-3 text-center">
             <ul id="userList" class="list-group"></ul>
         </div>
+
+        <video class="col-md-2 autoplay playsinline" autoplay id="localVideo"></video>
+        <video class="col-md-2" id="remoteVideo" autoplay></video>
     </div>
 
-    <div id="messageChatRow" class="row">
-        <div class="col-md-offset-9 col-md-3">
+
+    <div class="row">
+        <div ng-include="'html/canvas.html'">
+            <!-- loads canvs in here on page load -->
+        </div>
+
+
+        <!-- Message box -->
+        <div class="col-md-3">
             <div id="textChat" class="chat-box padding-md">
                 <div class="row">
                     <div class="col-md-offset-1 col-md-10">
