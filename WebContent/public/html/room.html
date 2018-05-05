@@ -19,14 +19,29 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-3 text-center">
+        <div class="col-md-2 text-center">
             <ul id="userList" class="list-group"></ul>
         </div>
 
-        <video class="col-md-2 autoplay playsinline" autoplay id="localVideo"></video>
-        <video class="col-md-2" id="remoteVideo" autoplay></video>
+        <div class="col-md-2">
+            <div class="margin-xs border-sm">
+                <video id="localVideo" autoplay ></video>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="margin-xs border-sm">
+                <video id="remoteVideo" autoplay></video>
+            </div>
+        </div>
     </div>
 
+    <!-- Small Spacer -->
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="margin-md"></div>
+        </div>
+    </div>
 
     <div class="row">
         <div ng-include="'html/canvas.html'">
@@ -35,7 +50,7 @@
 
 
         <!-- Message box -->
-        <div class="col-md-3">
+        <div class="col-md-offset-1 col-md-2">
             <div id="textChat" class="chat-box padding-md">
                 <div class="row">
                     <div class="col-md-offset-1 col-md-10">

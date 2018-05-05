@@ -35,6 +35,10 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 		if ($rootScope.initialized) {
 			$scope.makeLobbyCalls();
 		}
+
+        $('#nav-section').html('');
+
+
 	};
 
 	$scope.makeLobbyCalls = function() {
