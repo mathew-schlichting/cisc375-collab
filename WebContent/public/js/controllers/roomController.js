@@ -8,8 +8,8 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
     $scope.localVideo = $('#localVideo')[0];
     $scope.remoteVideo = $('#remoteVideo')[0];
-    $scope.localStream;
-    $scope.peerConnection;
+    $scope.localStream = null;
+    $scope.peerConnection = null;
     $scope.peerConnectionConfig = {
         'iceServers': [{
                 'url': 'stun:stun.services.mozilla.com'
@@ -19,7 +19,13 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
             }
         ]
     };
-    $scope.serverConnection;
+    $scope.serverConnection = null;
+    
+    
+    $scope.constraints = {
+        video: true,
+        audio: true
+    };
 
     console.log(navigator.mediaDevices.getUserMedia);
     console.log(navigator.mediaDevices.mozGetUserMedia);
@@ -75,17 +81,31 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
 
         /*********************** Attempts to display video of ourselves ******************/
-
-        var constraints = {
-            video: true,
-            audio: true
-        };
+        
 
         //console.log(navigator);
 
+        
+    }; // init
+
+
+    $scope.setupStream = function(){
+        $scope.loadLocalVideo();
+
+        //make call to server with information todo
+
+        $scope.send('start_call', {});
+    };
+
+    $scope.closeStream = function(){
+        $scope.localStream.getTracks().forEach(track => track.stop());
+    };
+
+    
+    $scope.loadLocalVideo = function(){
         // TODO - this is the part that we need to test to make sure that adapterjs is working correctly:
         if (navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia(constraints)
+            navigator.mediaDevices.getUserMedia($scope.constraints)
                 .then(function(stream) {
 
                     var videoTracks = stream.getVideoTracks();
@@ -115,7 +135,9 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         } else {
             window.alert("Sorry; your browser does not support the getUserMedia API.");
         }
-    }; // init
+    };
+    
+    
 
     $scope.start = (isCaller) => {
         console.log("start functionality coming soon!");
@@ -135,40 +157,11 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     
     
     $scope.leaveRoom = function(){
+        $scope.closeStream();
         $scope.send('leave_room');
         $state.go('lobby');
     };
     
-
-    $scope.receivedUserList = function(list) {
-        var html = '';
-        var element = $('#userList');
-
-        for (var i = 0; i < list.length; i++) {
-            html += '<li id="' + list[i].username + '" class="list-group-item user-item"><div id="' + list[i].username + '-color" class="user-color"></div><div>' + list[i].username + '</div></li>';
-        }
-        element.html(html);
-        $compile(element.contents())($scope);
-
-        for (i = 0; i < list.length; i++) {
-            element = $('#' + list[i].username + '-color');
-            element.css('border-radius', '50%');
-            element.css('background-color', list[i].color);
-            $compile(element.contents())($scope);
-        }
-    };
-
-    $scope.receivedTextMessage = function(message, color) {
-        var element = $('#messageList');
-        element.html(element.html() + '<li class="list-group-item message"><div id="temp-color" class="user-color"></div><div class="pull-right">' + message + '</div></li>');
-        $compile(element.contents())($scope);
-
-        element = $('#temp-color');
-        element.css('border-radius', '50%');
-        element.css('background-color', color);
-        element.attr('id', '');
-        $compile(element.contents())($scope);
-    };
 
 
     function gotDescription(description) {
@@ -218,6 +211,42 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     }
 
 
+
+    
+    
+    
+    
+    /**********************   DONE   **************************************/
+    $scope.receivedUserList = function(list) {
+        var html = '';
+        var element = $('#userList');
+
+        for (var i = 0; i < list.length; i++) {
+            html += '<li id="' + list[i].username + '" class="list-group-item user-item"><div id="' + list[i].username + '-color" class="user-color"></div><div>' + list[i].username + '</div></li>';
+        }
+        element.html(html);
+        $compile(element.contents())($scope);
+
+        for (i = 0; i < list.length; i++) {
+            element = $('#' + list[i].username + '-color');
+            element.css('border-radius', '50%');
+            element.css('background-color', list[i].color);
+            $compile(element.contents())($scope);
+        }
+    };
+
+    $scope.receivedTextMessage = function(message, color) {
+        var element = $('#messageList');
+        element.html(element.html() + '<li class="list-group-item message"><div id="temp-color" class="user-color"></div><div class="pull-right">' + message + '</div></li>');
+        $compile(element.contents())($scope);
+
+        element = $('#temp-color');
+        element.css('border-radius', '50%');
+        element.css('background-color', color);
+        element.attr('id', '');
+        $compile(element.contents())($scope);
+    };
+    
     $scope.sendMessage = function() {
         $scope.send('text_message', {
             message: $scope.message

@@ -7,7 +7,10 @@
         </div>
 
         <div class="col-md-2">
-            <button class="btn btn-success" ng-click="start(true);">Start Call</button>
+            <button class="btn btn-success" ng-click="setupStream();">Start Call</button>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-danger" ng-click="closeStream();">End Call</button>
         </div>
     </div>
 
@@ -24,13 +27,13 @@
         </div>
 
         <div class="col-md-2">
-            <div class="margin-xs border-sm">
-                <video id="localVideo" autoplay ></video>
+            <div class="margin-xs">
+                <video id="localVideo" autoplay height="100%" width="100%"></video>
             </div>
         </div>
 
         <div class="col-md-2">
-            <div class="margin-xs border-sm">
+            <div class="margin-xs">
                 <video id="remoteVideo" autoplay></video>
             </div>
         </div>
