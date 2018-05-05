@@ -20,12 +20,22 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         ]
     };
     $scope.serverConnection = null;
+
+    $scope.connections = [];
     
     
     $scope.constraints = {
         video: true,
         audio: true
     };
+
+    $scope.offerOptions = {
+        offerToReceiveAudio: 1,
+        offerToReceiveVideo: 1
+    };
+
+
+
 
     console.log(navigator.mediaDevices.getUserMedia);
     console.log(navigator.mediaDevices.mozGetUserMedia);
@@ -94,11 +104,38 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
         //make call to server with information todo
 
-        $scope.send('start_call', {});
+        //$scope.send('start_call', {});
+        $scope.call();
     };
 
     $scope.closeStream = function(){
         $scope.localStream.getTracks().forEach(track => track.stop());
+    };
+
+    $scope.call = function (){
+
+        // Create an RTCPeerConnection via the polyfill.
+        var pc1Local = new RTCPeerConnection($scope.peerConnectionConfig);
+        var pc1Remote = new RTCPeerConnection($scope.peerConnectionConfig);
+        pc1Remote.ontrack = gotRemoteStream;
+        pc1Local.onicecandidate = gotIceCandidate;
+        pc1Remote.onicecandidate = gotIceCandidate;
+
+        $scope.localStream.getTracks().forEach(
+            function(track) {
+                pc1Local.addTrack(
+                    track,
+                    window.localStream
+                );
+            }
+        );
+
+        pc1Local.createOffer(
+            $scope.offerOptions
+        ).then(
+            gotDescription,
+            createOfferError
+        );
     };
 
     
