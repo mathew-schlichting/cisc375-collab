@@ -180,7 +180,7 @@ function createMessage(from, data) {
 }
 
 function sendData(client, type, from, data) {
-	if(client === null){
+	if(client !== null){
         client.emit(type, createMessage(from, data));
     } else {
 		console.log('client is null....')
@@ -241,14 +241,6 @@ function initSocketIO() {
     });
 
 	createNewRoom(1234);
-	createNewUser( '1', 'black', null);
-	joinRoom(1234, '1');
-	createNewUser( '2', 'black', null);
-    joinRoom(1234, '2');
-    createNewUser( '3', 'black', null);
-    joinRoom(1234, '3');
-    createNewUser( '4', 'black', null);
-    joinRoom(1234, '4');
 
     console.log('Created SocketIO');
 }

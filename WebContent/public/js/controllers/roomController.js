@@ -1,7 +1,7 @@
 /**
  * Created by Mathew on 4/30/2018.
  */
-function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
+function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compile) {
 
     $scope.roomid = '0001';
     $scope.meesage = '';
@@ -35,7 +35,7 @@ function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
     $scope.init = function() {
         $scope.roomid = $stateParams.roomid;
 
-
+        
         $scope.send('request_users');
 
         if (!$rootScope.socket.hasListeners('user_list')) {
@@ -57,6 +57,10 @@ function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
                 // (message.from !== $rootScope.userName)
             });
         }
+        
+        var element = $('#nav-section');
+        element.html('<div class="btn btn-danger" ng-click="leaveRoom();">Leave Room</div>');
+        $compile(element.contents())($scope);
 
 
 
@@ -128,6 +132,13 @@ function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
             $scope.peerConnection.createOffer(gotDescription, createOfferError);
         }
     }; // start
+    
+    
+    $scope.leaveRoom = function(){
+        $scope.send('leave_room');
+        $state.go('lobby');
+    };
+    
 
     $scope.receivedUserList = function(list) {
         var html = '';
