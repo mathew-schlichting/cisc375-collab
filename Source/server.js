@@ -236,6 +236,12 @@ function initSocketIO() {
             console.log('Received leave_room');
             leaveRoom(message.from);
         });
+		
+		client.on('rtc', (message) => {
+			console.log('Received rtc');
+			broadcastInRoom(people[message.from].room, 'rtc', message.from, message.data);
+		});
+		
         
         client.emit('init_client', createMessage('server', {id: currentId}));
     });
