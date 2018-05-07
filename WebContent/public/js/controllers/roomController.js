@@ -65,8 +65,6 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         }
 
 
-
-        // todo double check we need this
         if (!$rootScope.socket.hasListeners('start_call')) {
             $rootScope.socket.on('start_call', (message) => {
                 if($scope.localStream !== null){
@@ -75,23 +73,11 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
             });
         }
 
-
-
-
         var element = $('#nav-section');
         element.html('<div class="btn btn-danger" ng-click="leaveRoom();">Leave Room</div>');
         $compile(element.contents())($scope);
 
 
-
-        //$scope.serverConnection = new WebSocket('ws://' + window.location.hostname + ':8018');
-        // TODO - the following line will change drastically with socket.io:
-        //$s.serverConnection.onmessage = gotMessageFromServer; // TODO - rename this when actually connected
-        //var socket = io('http://localhost:8018');
-        //$rootsocket.on('connection', function (data) {
-        //    console.log(data);
-        //    socket.emit('my other event', { my: 'data' });
-        //});
         if (!$rootScope.socket.hasListeners('rtc')) {
             $rootScope.socket.on('rtc', (message) => {
                 if(message.from !== $rootScope.username) {
@@ -99,17 +85,6 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
                 }
             });
         }
-
-        //$scope.loadLocalVideo();
-
-
-
-        /*********************** Attempts to display video of ourselves ******************/
-
-
-        //console.log(navigator);
-
-
     }; // init
 
 
@@ -118,7 +93,9 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     };
 
     $scope.closeStream = function(){
-        $scope.localStream.getTracks().forEach(track => track.stop());
+        if($scope.localStream !== null){
+            $scope.localStream.getTracks().forEach(track => track.stop());
+        }
     };
 
 
