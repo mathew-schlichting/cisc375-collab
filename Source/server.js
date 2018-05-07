@@ -10,22 +10,24 @@ const path = require('path');
 const express = require('express');
 const favicon = require('serve-favicon');
 const bodyParser = require('body-parser');
-const https = require('https');
+const http = require('http');
+//const https = require('https');
 const SocketIO = require('socket.io');
 
 /* Server Variables */
 
-const options = {
-	key: fs.readFileSync(path.join(__dirname, 'cisc-dean.stthomas.edu-server.key')),
-	cert: fs.readFileSync(path.join(__dirname, 'cisc-dean.stthomas.edu-server.crt')),
-	ca: fs.readFileSync(path.join(__dirname, 'cisc-dean.stthomas.edu-ca.crt'))
-};
+//const options = {
+//	key: fs.readFileSync(path.join(__dirname, 'cisc-dean.stthomas.edu-server.key')),
+//	cert: fs.readFileSync(path.join(__dirname, 'cisc-dean.stthomas.edu-server.crt')),
+//	ca: fs.readFileSync(path.join(__dirname, 'cisc-dean.stthomas.edu-ca.crt'))
+//};
 
 
 
 const port = '8018';
 const app = express();
-const server = https.createServer(options, app);
+const server = http.createServer(app);
+//const server = https.createServer(options, app);
 const io = SocketIO(server);
 const public_dir = path.join(__dirname, '../WebContent/public');
 
