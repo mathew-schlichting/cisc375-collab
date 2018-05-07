@@ -72,11 +72,11 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         // todo double check we need this
         if (!$rootScope.socket.hasListeners('start_call')) {
             $rootScope.socket.on('start_call', (message) => {
-                $scope.start(message.from !== $rootScope.username);
+                if(message.from !== $rootScope.username){
+                    $scope.start(true);
+                }
             });
         }
-
-
 
 
 
@@ -117,9 +117,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
 
     $scope.setupStream = function(){
-       // $scope.loadLocalVideo();
-        $scope.start($rootScope.username === 'test');
-
+        $scope.loadLocalVideo();
     };
 
     $scope.closeStream = function(){
@@ -152,6 +150,10 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
                     
                     //console.log(stream);
                     //$scope.localVideo.src = window.URL.createObjectURL(stream);
+
+
+                    $scope.send('start_call');
+                    $scope.start(false);
                 })
                 .catch(function(error) {
                     console.log(error);
@@ -174,7 +176,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         });
 
         if(isCaller) {
-            console.log('Is Caller')
+            console.log('Is Caller');
             $scope.peerConnection.createOffer($scope.gotDescription, $scope.createOfferError);
         }
     }; // start
