@@ -1,0 +1,31 @@
+#canvasDiv {
+    border: 1px solid;
+    width: 560px;
+    height: 280px;
+}
+
+.color li {
+    list-style: none;
+    width: 150px;
+    border:1px solid #999;
+    text-align: center;
+    cursor: pointer;
+}
+
+.size li {
+    list-style: none;
+    width: 150px;
+    border:1px solid #999;
+    text-align: center;
+    cursor: pointer;
+}
+
+.selectedColor {
+    border:2px solid #000 !important;
+}
+
+
+#colorSample {
+    height: 5em;
+    width: 100%;
+}

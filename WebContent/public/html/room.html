@@ -1,34 +1,59 @@
 <div ng-controller="roomCtrl" ng-init="init()">
     <div class="row">
-        <div class="col-sm-2">
+        <div class="col-md-3">
             <h3>
                 Room: {{roomid}}
             </h3>
         </div>
 
-        <video class="col-md-10 autoplay playsinline" id="localVideo">
-        </video>
-
-        <video class="col-md-10" id="remoteVideo">
-        </video>
-
-        <button class="btn btn-success" ng-click="start(true);">Start Call</button>
+        <div class="col-md-2">
+            <button class="btn btn-success" ng-click="setupStream();">Start Call</button>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-danger" ng-click="closeStream();">End Call</button>
+        </div>
     </div>
+
     <div class="row">
-        <div class="col-md-1 text-center">
+        <div class="col-md-3 text-center">
             <h4 class=" full-size text-center">
                 Users:
             </h4>
         </div>
     </div>
     <div class="row">
-        <div class="col-md-3 text-center">
+        <div class="col-md-2 text-center">
             <ul id="userList" class="list-group"></ul>
+        </div>
+
+        <div class="col-md-2">
+            <div class="margin-xs">
+                <video id="localVideo" autoplay height="100%" width="100%"></video>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="margin-xs">
+                <video id="remoteVideo" autoplay height="100%" width="100%"></video>
+            </div>
         </div>
     </div>
 
-    <div id="messageChatRow" class="row">
-        <div class="col-md-offset-9 col-md-3">
+    <!-- Small Spacer -->
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="margin-md"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div ng-include="'html/canvas.html'">
+            <!-- loads canvs in here on page load -->
+        </div>
+
+
+        <!-- Message box -->
+        <div class="col-md-offset-1 col-md-2">
             <div id="textChat" class="chat-box padding-md">
                 <div class="row">
                     <div class="col-md-offset-1 col-md-10">
@@ -46,8 +71,4 @@
             </div>
         </div>
     </div>
-
-
-
-
 </div>

@@ -1,0 +1,81 @@
+<div ng-controller="canvasCtrl" ng-init="init();">
+
+    <!-- Canvas -->
+    <div class="col-md-6">
+        <div id="canvasDiv">
+            <canvas id="drawing" ng-mouseup="stopDrawing();" ng-mouseleave="stopDrawing();" ng-mousedown="startDrawing($event);" ng-mousemove="drawMore($event);" width="560" height="280"></canvas>
+        </div>
+    </div>
+    <!-- End Canvas -->
+
+    <!-- Selection Tools -->
+    <div class="col-md-3">
+        <button id="clearcanvas" class="btn btn-default" ng-click="clearCanvas()">Clear Canvas</button>
+        <button id="erasecanvas" class="btn btn-default" ng-click="toEraser()">Eraser</button>
+        <button id="pencanvas"  class="btn btn-info" ng-click="toPen()">Pen</button>
+
+
+        <div class="colordiv">
+            <div class="row">
+                <div class="col-sm-11 padding-sm border-sm">
+                    <div id="colorSample"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-2">
+                    Red:
+                </div>
+                <div class="col-sm-9">
+                    <div class="range-slider">
+                        <input ng-model="red" class="range-slider__range" type="range" value="0" min="0" max="255">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-2">
+                    Green:
+                </div>
+                <div class="col-sm-9">
+                    <div class="range-slider">
+                        <input ng-model="green" class="range-slider__range" type="range" value="0" min="0" max="255">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-2">
+                    Blue:
+                </div>
+                <div class="col-sm-9">
+                    <div class="range-slider">
+                        <input ng-model="blue" class="range-slider__range" type="range" value="0" min="0" max="255">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--
+        <ul class="color">
+            <li class="selectedColor" ng-click="changeColor($event, 0)"><span>Purple</span></li>
+            <li ng-click="changeColor($event, 1)"><span>Red</span></li>
+            <li ng-click="changeColor($event, 2)"><span>Green</span></li>
+            <li ng-click="changeColor($event, 3)"><span>Yellow</span></li>
+
+        </ul>
+        -->
+        <div class="sizediv">
+            <div class="row">
+                <div class="col-sm-2">
+                    Size:
+                </div>
+                <div class="col-sm-9">
+                    <div class="range-slider">
+                        <input ng-model="cursize" class="range-slider__range" type="range" value="25" min="1" max="50">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Selection Tools -->
+    </div>

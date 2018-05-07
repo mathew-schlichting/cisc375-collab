@@ -13,13 +13,13 @@
         <div class="col-lg-6 col-lg-offset-3">
             <ul id="roomsList" class="list-group">
 
-                <li ng-repeat="r in rooms" id="{{room.id}}" class="list-group-item" ng-click="joinRoom({{room.id}});">
+                <li ng-repeat="r in rooms" class="list-group-item" ng-click="joinRoom(r.id);">
                     <div class="row">
                         <div class="col-sm-2">
                             ID: {{r.id}}
                         </div>
                         <div class="col-sm-10">
-                            People: {{r.users}}
+                            People: <span ng-repeat="u in r.users">{{u}}</span>{{r.users}}
                         </div>
                     </div>
                 </li>

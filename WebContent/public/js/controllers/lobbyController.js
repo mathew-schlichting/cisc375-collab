@@ -3,13 +3,13 @@
  */
 function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 
-	$scope.rooms = []; //[{id: 'boi', users: ['test']}];
+    $scope.rooms = [];
 
 	$scope.init = function() {
 
-		if ($rootScope.socket === undefined) {
-			$rootScope.socket = io();
-		}
+        if($rootScope.socket === undefined) {
+            $rootScope.socket = io();
+        }
 
 
 		if (!$rootScope.socket.hasListeners('init_client')) {
@@ -23,16 +23,22 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 			});
 		}
 
-		if (!$rootScope.socket.hasListeners('rooms_list')) {
-			$rootScope.socket.on('rooms_list', (message) => {
+        if(!$rootScope.socket.hasListeners('rooms_list')) {
+            $rootScope.socket.on('rooms_list', (message) => {
+				$scope.rooms = [];
 				console.log('loading rooms');
-				$scope.loadRooms(message.data);
-			});
-		}
+                $scope.loadRooms(message.data);
+                $scope.$apply()
+            });
+        }
 
 		if ($rootScope.initialized) {
 			$scope.makeLobbyCalls();
 		}
+
+        $('#nav-section').html('');
+
+
 	};
 
 	$scope.makeLobbyCalls = function() {
@@ -41,38 +47,11 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 	};
 
 
-	$scope.loadRooms = function(rooms) {
-		$scope.rooms = [];
-		for (r in rooms) {
-			$scope.rooms.push({
-				id: r,
-				users: rooms[r].users
-			});
-		}
-
-
-		//var element = $('#roomsList');
-		//element.html($scope.createRoomsList(rooms));
-		//$compile(element.contents())($scope);
-	};
-
-	$scope.createRooms = function(rooms) {
-		console.log(rooms);
-		return rooms;
-	};
-
-	$scope.createRoomsList = function(rooms) {
-		var html = '';
-		for (var id in rooms) {
-			html += $scope.createRoomTile(id, rooms[id]);
-		}
-		html += '<li class="list-group-item"><button class="btn btn-success full-size" ng-click="createRoom()">Create Room</button></li>';
-		return html;
-	};
-
-	$scope.createRoomTile = function(id, room) {
-		return '<li id="' + id + '" class="list-group-item" ng-click="joinRoom(' + id + ');"><div class="row"><div class="col-sm-2">ID: ' + id + '</div><div class="col-sm-10">People: ' + room.users + '</div></div></li>';
-	};
+    $scope.loadRooms = function (rooms) {
+        for(var r in rooms){
+            $scope.rooms.push({id: r, users: rooms[r].users});
+        }
+    };
 
 	$scope.joinRoom = function(id) {
 		$scope.send('join_room', {
@@ -84,7 +63,7 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 	};
 
 	$scope.createRoom = function() {
-		var id = Math.floor(8999 * Math.random()) + 1111;
+		var id = Math.floor(8888 * Math.random()) + 1111;
 
 		$.get('/validRoom/' + id, (data) => {
 			if (data.valid) {
