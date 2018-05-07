@@ -52,7 +52,13 @@ function roomControllerFunction($scope, $stateParams, $rootScope, $compile) {
 
         if (!$rootScope.socket.hasListeners('start_call')) {
             $rootScope.socket.on('start_call', (message) => {
-                $scope.receivedTextMessage(message.data.message, message.data.color);
+                if(message.from != $rootScope.userName)
+                {
+                    console.log("This call was not started by us.");
+                } else {
+                    console.log("We started this call!");
+                }
+//                $scope.receivedTextMessage(message.data.message, message.data.color);
 
                 // (message.from !== $rootScope.userName)
             });
