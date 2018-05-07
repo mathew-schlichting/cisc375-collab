@@ -19,8 +19,8 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
             }
         ]
     };
-    $scope.serverConnection = null;
 
+    //todo
     $scope.connections = [];
     
     
@@ -72,7 +72,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         // todo double check we need this
         if (!$rootScope.socket.hasListeners('start_call')) {
             $rootScope.socket.on('start_call', (message) => {
-                if(message.from !== $rootScope.username){
+                if(message.from !== $rootScope.username && $scope.localStream !== null){
                     $scope.start(true);
                 }
             });
@@ -103,7 +103,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
             });
         }
         
-        $scope.loadLocalVideo();
+        //$scope.loadLocalVideo();
 
 
 

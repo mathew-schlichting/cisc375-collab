@@ -242,6 +242,10 @@ function initSocketIO() {
 			broadcastInRoom(people[message.from].room, 'rtc', message.from, message.data);
 		});
 		
+		client.on('start_call', (message) => {
+			broadcastInRoom(people[message.from].room, 'start_call', message.from, message.data);
+		});
+		
         
         client.emit('init_client', createMessage('server', {id: currentId}));
     });
