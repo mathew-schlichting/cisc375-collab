@@ -248,7 +248,7 @@ function initSocketIO() {
         });
 		
 		client.on('rtc', (message) => {
-			console.log('Received rtc');
+			console.log('Received rtc');			
 			broadcastInRoom(people[message.from].room, 'rtc', message.from, message.data);
 		});
 		
