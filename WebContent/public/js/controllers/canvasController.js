@@ -70,6 +70,7 @@ function canvasControllerFunction($scope, $state, $rootScope, $compile) {
     };
 
     $scope.drawMore = function(e) {
+        console.log("scroll: " + ($(window).scrollTop()) + "; e.clientY: " + (e.clientY) + " | " + $scope.paint);
         if ($scope.paint) {
             $scope.addClick(e.clientX - $scope.canvasLeft, e.clientY - $scope.canvasTop, true);
             $scope.redraw();
