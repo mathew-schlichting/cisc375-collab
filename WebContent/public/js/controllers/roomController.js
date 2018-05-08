@@ -28,7 +28,8 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
     $scope.constraints = {
         video: true,
-        audio: true
+    //    audio: true
+        audio: false
     };
 
     $scope.offerOptions = {
@@ -53,6 +54,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
         if (!$rootScope.socket.hasListeners('user_list')) {
             $rootScope.socket.on('user_list', (message) => {
+                console.log("got request for the user_list; message.data = " + message.data);
                 $scope.receivedUserList(message.data);
             });
         }
@@ -66,9 +68,18 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
         if (!$rootScope.socket.hasListeners('start_call')) {
             $rootScope.socket.on('start_call', (message) => {
+                console.log("on start_call; $scope.localStream = " + $scope.localStream);
                 if($scope.localStream !== null){
                     $scope.start(true, message.from);
-                }
+                } /*else {
+                    $scope.start(false, message.from);
+                }*/
+            });
+        }
+
+        if (!$rootScope.socket.hasListeners('user_joined')) {
+            $rootScope.socket.on('user_joined', (message) => {
+                console.log("Got a new user! " + message.data);
             });
         }
 
@@ -124,9 +135,9 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
                     //console.log(stream);
                     //$scope.localVideo.src = window.URL.createObjectURL(stream);
 
-
                     $scope.send('start_call');
                     for(var i = 0; i < $scope.users.length; i++) {
+                        console.log("Calling " + $scope.users[i].username);
                         $scope.start(false, $scope.users[i].username);
                     }
                 })
@@ -141,20 +152,27 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
 
     $scope.start = (isCaller, username) => {
+        console.log("start: isCaller = " + isCaller + "; username = " + username);
         if($rootScope.username !== username) {
             $scope.peerConnection[username] = new RTCPeerConnection($scope.peerConnectionConfig);
             console.log($scope.peerConnection);
             $scope.peerConnection[username].onicecandidate = $scope.gotIceCandidate;
-            $scope.peerConnection[username].onaddstream = $scope.gotRemoteStream;
+            //$scope.peerConnection[username].onaddstream = $scope.gotRemoteStream; // deprecated - use ontrack:
+            $scope.peerConnection[username].ontrack = $scope.gotRemoteStream;
             $scope.localStream.getTracks().forEach( (track) => {
                 $scope.peerConnection[username].addTrack(track, $scope.localStream);
             });
 
             if(isCaller) {
-                console.log('Is Caller');
-                $scope.peerConnection[username].createOffer($scope.gotDescription, $scope.createOfferError);
+                console.log(username + 'Is Caller');
+                $scope.peerConnection[username].createOffer()
+                .then((description) => {
+                    $scope.gotDescription(description, username);
+                })
+                .catch($scope.createOfferError);
             }
         } // if - don't call ourself
+
     }; // start
 
 
@@ -167,7 +185,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
 
     $scope.gotDescription = function(description, username) {
-    	console.log('got description');
+    	console.log('got description; username = ' + username + '; $rootScope.username = ' + $rootScope.username);
     	$scope.peerConnection[username].setLocalDescription(description, function() {
     		$scope.send('rtc', {
     			'sdp': description
@@ -189,8 +207,14 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     $scope.gotRemoteStream = function(event) {
     	console.log('got remote stream');
     	console.log(event);
-    	$scope.remoteVideo.src = window.URL.createObjectURL(event.stream);
-    	console.log($scope.remoteVideo);
+    	//$scope.remoteVideo.src = window.URL.createObjectURL(event.stream);
+        if ("srcObject" in $scope.remoteVideo) {
+            $scope.remoteVideo.srcObject = event.streams[0];
+        } else {
+            // Avoid using this in new browsers, as it is going away.
+            $scope.remoteVideo.src = window.URL.createObjectURL(event.streams[0]);
+            //console.log($scope.localVideo.src);
+        }
     };
 
     $scope.createOfferError = function(error) {
@@ -203,11 +227,16 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
     $scope.gotMessageFromServer = function(message) {
         var signal = message.data;
+        console.log("gotMessageFromServer: do we get this far?");
         if (signal.sdp) {
             $scope.peerConnection[message.from].setRemoteDescription(new RTCSessionDescription(signal.sdp), function () {
                 if (signal.sdp.type == 'offer') {
                     console.log('Creating Answer');
-                    $scope.peerConnection[message.from].createAnswer($scope.gotDescription, $scope.createAnswerError);
+                    $scope.peerConnection[message.from].createAnswer()
+                    .then((description) => {
+                        $scope.gotDescription(description, message.from);
+                    })
+                    .catch($scope.createAnswerError);
                 }
             });
         } else if (signal.ice) {
@@ -225,6 +254,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     /**********************   DONE   **************************************/
     $scope.receivedUserList = function(list) {
         $scope.users = list;
+        console.log($scope.users);
 
         var html = '';
         var element = $('#userList');
