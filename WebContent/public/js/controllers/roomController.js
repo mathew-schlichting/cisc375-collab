@@ -51,11 +51,8 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     window.RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
     window.RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
 
-
-
     $scope.init = function() {
         $scope.roomid = $stateParams.roomid;
-
 
         $scope.send('request_users');
 
@@ -209,8 +206,19 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     $scope.gotRemoteStream = function(event) {
     	console.log('got remote stream');
     	//console.log(event);
-    	$scope.remoteVideo.src = window.URL.createObjectURL(event.stream);
-    	//console.log($scope.remoteVideo);
+    	//$scope.remoteVideo.src = window.URL.createObjectURL(event.stream);
+
+        var id = Math.floor(8888 * Math.random()) + 1111;
+        var html =  '<dragDiv><video id="remoteVideo-' + id + '" autoplay height="100%" width="100%"></video></dragDiv>';
+
+        $('#remoteVideo-' + id)[0].src = window.URL.createObjectURL(event.stream);
+
+        var element = $('#videoContainer');
+        element.html(element.html() + html);
+    };
+
+    $scope.refreshDraggable = function(){
+        $('dragDiv').draggable();
     };
 
     $scope.createOfferError = function(error) {
