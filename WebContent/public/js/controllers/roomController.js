@@ -7,6 +7,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     $scope.meesage = '';
 
     $scope.users = {};
+    $scope.tempUser = null;
 
     $scope.localVideo = $('#localVideo')[0];
     $scope.remoteVideo = $('#remoteVideo')[0];
@@ -166,9 +167,14 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
 
 
-    $scope.gotDescription = function(description, username) {
+    $scope.gotDescription = function(description) {
     	console.log('got description');
-    	$scope.peerConnection[username].setLocalDescription(description, function() {
+    	console.log(description);
+    	description.username = 'test';
+    	console.log(description);
+
+
+    	$scope.peerConnection[$scope.tempUser].setLocalDescription(description, function() {
     		$scope.send('rtc', {
     			'sdp': description
     		});
@@ -178,7 +184,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     };
 
     $scope.gotIceCandidate = function(event) {
-    	if (event.candidate != null) {
+    	if (event.candidate !== null) {
     		console.log(event.candidate);
     		$scope.send('rtc', {
     			'ice': event.candidate
@@ -205,7 +211,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         var signal = message.data;
         if (signal.sdp) {
             $scope.peerConnection[message.from].setRemoteDescription(new RTCSessionDescription(signal.sdp), function () {
-                if (signal.sdp.type == 'offer') {
+                if (signal.sdp.type === 'offer') {
                     console.log('Creating Answer');
                     $scope.peerConnection[message.from].createAnswer($scope.gotDescription, $scope.createAnswerError);
                 }
