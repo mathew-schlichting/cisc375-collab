@@ -3,29 +3,27 @@
  */
 function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compile) {
 
+
+    /* Information about the current room */
     $scope.roomid = '0001';
     $scope.meesage = '';
-
     $scope.users = {};
 
+
+    /* video connections */
     $scope.localVideo = $('#localVideo')[0];
     $scope.remoteVideo = $('#remoteVideo')[0];
     $scope.localStream = null;
-    $scope.peerConnection = {};
-    $scope.peerConnectionConfig = {
-        'iceServers': [{
-                'url': 'stun:stun.services.mozilla.com'
-            },
-            {
-                'url': 'stun:stun.l.google.com:19302'
-            }
-        ]
-    };
 
-    //todo
+
+    // $scope.peerConnection = {};
+
+    // New way to handle connections
     $scope.connections = [];
+    $scope.remoteStreams = [];
 
 
+    /* Constants to help build connections */
     $scope.constraints = {
         video: true,
     //    audio: true
@@ -37,6 +35,16 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         offerToReceiveVideo: 1
     };
 
+    $scope.peerConnectionConfig = {
+        'iceServers': [{
+            'url': 'stun:stun.services.mozilla.com'
+        },
+            {
+                'url': 'stun:stun.l.google.com:19302'
+            }
+        ]
+    };
+
 
     // We'll want to use adapterjs to avoid the following lines:
     navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.mediaDevices.mozGetUserMedia || navigator.mediaDevices.webkitGetUserMedia;
@@ -44,11 +52,8 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     window.RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
     window.RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
 
-
-
     $scope.init = function() {
         $scope.roomid = $stateParams.roomid;
-
 
         $scope.send('request_users');
 
@@ -115,25 +120,18 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
             navigator.mediaDevices.getUserMedia($scope.constraints).then(function(stream) {
 
                     var videoTracks = stream.getVideoTracks();
-                    for (var i = 0; i < videoTracks.length; i++) {
-                        console.log(videoTracks[i]);
-                    }
+                    //for (var i = 0; i < videoTracks.length; i++) {
+                    //    console.log(videoTracks[i]);
+                    //}
 
                     // Success:
                     $scope.localStream = stream;
-                    //console.log($scope.localStream);
-                    // Older browsers may not have srcObject
-                    //console.log($scope.localVideo);
                     if ("srcObject" in $scope.localVideo) {
                         $scope.localVideo.srcObject = stream;
                     } else {
                         // Avoid using this in new browsers, as it is going away.
                         $scope.localVideo.src = window.URL.createObjectURL(stream);
-                        //console.log($scope.localVideo.src);
                     }
-
-                    //console.log(stream);
-                    //$scope.localVideo.src = window.URL.createObjectURL(stream);
 
                     $scope.send('start_call');
                     for(var i = 0; i < $scope.users.length; i++) {
@@ -149,18 +147,24 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         }
     };
 
+    $scope.closeConnection = function(event){
+        console.log('in on close');
+        console.log(event);
+    };
 
 
     $scope.start = (isCaller, username) => {
         console.log("start: isCaller = " + isCaller + "; username = " + username);
         if($rootScope.username !== username) {
+
             $scope.peerConnection[username] = new RTCPeerConnection($scope.peerConnectionConfig);
             console.log($scope.peerConnection);
             $scope.peerConnection[username].onicecandidate = $scope.gotIceCandidate;
             //$scope.peerConnection[username].onaddstream = $scope.gotRemoteStream; // deprecated - use ontrack:
             $scope.peerConnection[username].ontrack = $scope.gotRemoteStream;
+
             $scope.localStream.getTracks().forEach( (track) => {
-                $scope.peerConnection[username].addTrack(track, $scope.localStream);
+                temp.addTrack(track, $scope.localStream);
             });
 
             if(isCaller) {
@@ -171,6 +175,12 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
                 })
                 .catch($scope.createOfferError);
             }
+
+            // Array format
+            $scope.connections.push(temp);
+            //object format
+            //$scope.peerConnection[username] = temp;
+
         } // if - don't call ourself
 
     }; // start
@@ -192,12 +202,12 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     		});
     	}, function() {
     		console.log('set description error')
-    	});
+    	});*/
     };
 
     $scope.gotIceCandidate = function(event) {
-    	if (event.candidate != null) {
-    		console.log(event.candidate);
+    	if (event.candidate !== null) {
+    		//console.log(event.candidate);
     		$scope.send('rtc', {
     			'ice': event.candidate
     		});
@@ -229,8 +239,22 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         var signal = message.data;
         console.log("gotMessageFromServer: do we get this far?");
         if (signal.sdp) {
+            $scope.connections[$scope.connections.length - 1].setRemoteDescription(new RTCSessionDescription(signal.sdp), function () {
+                if (signal.sdp.type === 'offer') {
+                    console.log('Creating Answer');
+                    $scope.connections[$scope.connections.length - 1].createAnswer($scope.gotDescription, $scope.createAnswerError);
+                }
+            });
+        } else if (signal.ice) {
+            console.log('Adding Ice Candidate');
+            $scope.connections[$scope.connections.length - 1].addIceCandidate(new RTCIceCandidate(signal.ice));
+        }
+
+
+        /*
+        if (signal.sdp) {
             $scope.peerConnection[message.from].setRemoteDescription(new RTCSessionDescription(signal.sdp), function () {
-                if (signal.sdp.type == 'offer') {
+                if (signal.sdp.type === 'offer') {
                     console.log('Creating Answer');
                     $scope.peerConnection[message.from].createAnswer()
                     .then((description) => {
@@ -243,6 +267,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
             console.log('Adding Ice Candidate');
             $scope.peerConnection[message.from].addIceCandidate(new RTCIceCandidate(signal.ice));
         }
+        */
     };
 
 
