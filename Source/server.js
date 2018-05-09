@@ -169,44 +169,9 @@ function broadcastInLobby(type, from, data) {
 	}
 }
 
-// TODO - current problem is that it's not recognizing the room number
-// (even when it prints as being there) -- maybe it's happening too quickly?
 function broadcastInRoom(roomid, type, from, data) {
-    /*
-    var sendToPerson    = true;
-    for (var p in people) {
-        if (people[p]) {    sendToPerson    = sendToPerson && people[p]; }
-        else {
-            console.log(p + ": Problem = people[p]:");
-            //console.log(people[p]);
-        }
-        if (people[p].client !== null) {    sendToPerson    = sendToPerson && people[p].client !== null; }
-        else {
-            console.log(p + ": Problem = people[p].client !== null:");
-            //console.log(people[p].client !== null);
-        }
-        if (people[p].client.connected) {    sendToPerson    = sendToPerson && people[p].client.connected; }
-        else {
-            console.log(p + ": Problem = people[p].client.connected:");
-            //console.log(people[p].client.connected);
-        }
-        var peopleRoom  = people[p].room;
-        console.log("Comparing id's: " + (peopleRoom === roomid));
-        if (peopleRoom === roomid) {    sendToPerson    = sendToPerson && peopleRoom === roomid; }
-        else {
-            console.log(p + ": people[p].room = " + peopleRoom + "; roomid = " + roomid);
-        }
-
-        console.log(people[p].client, type, from, data, sendToPerson);
-
-        if(people[p] && (people[p].client !== null) && (people[p].client.connected) && (people[p].room === roomid)) {
-            sendData(people[p].client, type, from, data);
-        }
-    }
-    */
-
-	for (var p in people) {
-		if (people[p] && people[p].client !== null && people[p].client.connected && people[p].room === roomid) {
+   	for (var p in people) {
+		if (people[p] && people[p].client !== null && people[p].client.connected && Number(people[p].room) === Number(roomid)) {
 			sendData(people[p].client, type, from, data);
 		}
 	}
@@ -222,7 +187,7 @@ function createMessage(from, data) {
 	return {
 		from: from,
 		data: data
-	}; //JSON.stringify({from: from, data: data});
+	};
 }
 
 function sendData(client, type, from, data) {
