@@ -239,7 +239,6 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
                 });
             }
         }
-
     };
 
     $scope.gotIceCandidate = function(event) {
