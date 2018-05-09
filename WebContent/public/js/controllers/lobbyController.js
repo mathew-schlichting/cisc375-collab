@@ -26,7 +26,7 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
         if(!$rootScope.socket.hasListeners('rooms_list')) {
             $rootScope.socket.on('rooms_list', (message) => {
 				$scope.rooms = [];
-				console.log('loading rooms');
+				console.log('loading rooms', message.data);
                 $scope.loadRooms(message.data);
                 $scope.$apply()
             });

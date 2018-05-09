@@ -218,21 +218,12 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
     $scope.gotDescription = function(description, username) {
         $scope.peerConnection[username].peer.setLocalDescription(description, function() {
-<<<<<<< HEAD
-                $scope.send('rtc', {
-                    'sdp': description
-                });
-            }, function(error){
-                console.log('set description error');
-                console.log(error);
-=======
             $scope.send('rtc', {
                 'sdp': description
             });
         }, function(error){
             console.log('set description error');
             console.log(error);
->>>>>>> 47b2c63a40d709a690a3933403785d6670f9824e
         });
     };
 
