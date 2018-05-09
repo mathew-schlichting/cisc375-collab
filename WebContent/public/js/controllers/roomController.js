@@ -299,10 +299,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
                     .then((answer) => {
                         $scope.gotDescription(answer, message.from);
                     })
-                    .catch((error) => {
-                        //$scope.createAnswerError(error);
-                        console.log(error);
-                    });
+                    .catch($scope.createAnswerError(error));
                 }
             });
         } else if (signal.ice) {
