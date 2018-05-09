@@ -59,7 +59,6 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
         if (!$rootScope.socket.hasListeners('user_list')) {
             $rootScope.socket.on('user_list', (message) => {
-                console.log("got request for the user_list; message.data = " + message.data);
                 $scope.receivedUserList(message.data);
             });
         }
@@ -79,12 +78,6 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
                 } /*else {
                     $scope.start(false, message.from);
                 }*/
-            });
-        }
-
-        if (!$rootScope.socket.hasListeners('user_joined')) {
-            $rootScope.socket.on('user_joined', (message) => {
-                console.log("Got a new user! " + message.data);
             });
         }
 
@@ -154,7 +147,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
 
     $scope.start = (isCaller, username) => {
-        console.log("start: isCaller = " + isCaller + "; username = " + username);
+        //console.log("start: isCaller = " + isCaller + "; username = " + username);
         if($rootScope.username !== username) {
             var temp = new RTCPeerConnection($scope.peerConnectionConfig);
             temp.onicecandidate = $scope.gotIceCandidate;
@@ -225,10 +218,19 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         var id = Math.floor(8888 * Math.random()) + 1111;
         var html =  '<dragDiv><video id="remoteVideo-' + id + '" autoplay height="100%" width="100%"></video></dragDiv>';
 
-        $('#remoteVideo-' + id)[0].src = window.URL.createObjectURL(event.stream);
-
         var element = $('#videoContainer');
         element.html(element.html() + html);
+
+        console.log($('#remoteVideo-' + id)[0]);
+        //$('#remoteVideo-' + id)[0].src = window.URL.createObjectURL(event.stream);
+        if ("srcObject" in $scope.remoteVideo) {
+            $('#remoteVideo-' + id)[0].srcObject = event.stream;
+        } else {
+            // Avoid using this in new browsers, as it is going away.
+            $('#remoteVideo-' + id)[0].src = window.URL.createObjectURL(event.stream);
+            //console.log($scope.localVideo.src);
+        }
+
     };
 
     $scope.refreshDraggable = function(){
@@ -243,6 +245,10 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         console.log(error);
     };
 
+    $scope.addIceCandidateError = function(error){
+        console.log(error);
+    };
+
     $scope.gotMessageFromServer = function(message) {
         var signal = message.data;
         if (signal.sdp) {
@@ -254,7 +260,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
             });
         } else if (signal.ice) {
             console.log('Adding Ice Candidate');
-            $scope.connections[$scope.connections.length - 1].addIceCandidate(new RTCIceCandidate(signal.ice));
+            $scope.connections[$scope.connections.length - 1].addIceCandidate(new RTCIceCandidate(signal.ice) /*, $scope.addIceCandidateError */);
         }
 
 
