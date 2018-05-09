@@ -64,14 +64,14 @@ function canvasControllerFunction($scope, $state, $rootScope, $compile) {
 
     $scope.startDrawing = function(e){
         $scope.paint = true;
-        $scope.addClick(e.clientX - $scope.canvasLeft, e.clientY - $scope.canvasTop, false);
+        $scope.addClick(e.clientX - $scope.paper.getBoundingClientRect().left, e.clientY - $scope.paper.getBoundingClientRect().top, false);
         $scope.redraw();
         $('body').css('cursor', 'default');
     };
 
     $scope.drawMore = function(e) {
         if ($scope.paint) {
-            $scope.addClick(e.clientX - $scope.canvasLeft, e.clientY - $scope.canvasTop, true);
+            $scope.addClick(e.clientX - $scope.paper.getBoundingClientRect().left, e.clientY - $scope.paper.getBoundingClientRect().top, true);
             $scope.redraw();
             $('body').css('cursor', 'default');
         }

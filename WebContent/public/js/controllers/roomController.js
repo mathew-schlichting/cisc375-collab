@@ -156,24 +156,17 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     $scope.start = (isCaller, username) => {
         console.log("start: isCaller = " + isCaller + "; username = " + username);
         if($rootScope.username !== username) {
-
-            $scope.peerConnection[username] = new RTCPeerConnection($scope.peerConnectionConfig);
-            console.log($scope.peerConnection);
-            $scope.peerConnection[username].onicecandidate = $scope.gotIceCandidate;
-            //$scope.peerConnection[username].onaddstream = $scope.gotRemoteStream; // deprecated - use ontrack:
-            $scope.peerConnection[username].ontrack = $scope.gotRemoteStream;
-
+            var temp = new RTCPeerConnection($scope.peerConnectionConfig);
+            temp.onicecandidate = $scope.gotIceCandidate;
+            temp.onaddstream = $scope.gotRemoteStream;
+            temp.oniceconnectionstatechange = $scope.closeConnection;
             $scope.localStream.getTracks().forEach( (track) => {
                 temp.addTrack(track, $scope.localStream);
             });
 
             if(isCaller) {
-                console.log(username + 'Is Caller');
-                $scope.peerConnection[username].createOffer()
-                .then((description) => {
-                    $scope.gotDescription(description, username);
-                })
-                .catch($scope.createOfferError);
+                console.log('Is Caller');
+                temp.createOffer($scope.gotDescription, $scope.createOfferError);
             }
 
             // Array format
@@ -195,8 +188,18 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
 
     $scope.gotDescription = function(description, username) {
-    	console.log('got description; username = ' + username + '; $rootScope.username = ' + $rootScope.username);
-    	$scope.peerConnection[username].setLocalDescription(description, function() {
+        console.log('got description');
+
+        $scope.connections[$scope.connections.length -1].setLocalDescription(description, function() {
+            $scope.send('rtc', {
+                'sdp': description
+            });
+        }, function(){
+            console.log('set description error')
+        });
+
+        /*
+    	$scope.peerConnection[description.username].setLocalDescription(description, function() {
     		$scope.send('rtc', {
     			'sdp': description
     		});
@@ -216,15 +219,20 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
     $scope.gotRemoteStream = function(event) {
     	console.log('got remote stream');
-    	console.log(event);
+    	//console.log(event);
     	//$scope.remoteVideo.src = window.URL.createObjectURL(event.stream);
-        if ("srcObject" in $scope.remoteVideo) {
-            $scope.remoteVideo.srcObject = event.streams[0];
-        } else {
-            // Avoid using this in new browsers, as it is going away.
-            $scope.remoteVideo.src = window.URL.createObjectURL(event.streams[0]);
-            //console.log($scope.localVideo.src);
-        }
+
+        var id = Math.floor(8888 * Math.random()) + 1111;
+        var html =  '<dragDiv><video id="remoteVideo-' + id + '" autoplay height="100%" width="100%"></video></dragDiv>';
+
+        $('#remoteVideo-' + id)[0].src = window.URL.createObjectURL(event.stream);
+
+        var element = $('#videoContainer');
+        element.html(element.html() + html);
+    };
+
+    $scope.refreshDraggable = function(){
+        $('dragDiv').draggable();
     };
 
     $scope.createOfferError = function(error) {
@@ -237,7 +245,6 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
     $scope.gotMessageFromServer = function(message) {
         var signal = message.data;
-        console.log("gotMessageFromServer: do we get this far?");
         if (signal.sdp) {
             $scope.connections[$scope.connections.length - 1].setRemoteDescription(new RTCSessionDescription(signal.sdp), function () {
                 if (signal.sdp.type === 'offer') {
