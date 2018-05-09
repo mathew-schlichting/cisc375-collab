@@ -82,7 +82,8 @@ function createNewUser(user, color, client) {
 		color: color,
 		drawing: {clickX: [], clickY: [], clickSize: [], clickColor: [], clickDrag: []},
 		room: null,
-		client: client
+		client: client,
+		streaming: false
 	};
 }
 
@@ -117,7 +118,8 @@ function getUserList(roomid) {
 		for (var i = 0; i < rooms[roomid].users.length; i++) {
 			result.push({
 				username: rooms[roomid].users[i],
-				color: getColorFor(rooms[roomid].users[i])
+				color: getColorFor(rooms[roomid].users[i]),
+				streaming: people[rooms[roomid].users[i]].streaming
 			});
 		}
 	}
@@ -146,6 +148,9 @@ function leaveRoom(username) {
 		}
 		people[username].room = null;
 	}
+
+	people[username].streaming = false;
+
 }
 
 function createNewRoom(roomid) {
@@ -319,6 +324,10 @@ function initSocketIO() {
 
 		client.on('update_drawing', (message) => {
 			updateDrawing(message.data);
+		});
+
+		client.on('start_streaming', (message) => {
+			people[message.from].streaming = true;
 		});
 
 
