@@ -3,6 +3,19 @@
  */
 function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compile) {
 
+    //credit to https://stackoverflow.com/questions/6122571/simple-non-secure-hash-function-for-javascript
+    String.prototype.hashCode = function() {
+        var hash = 0;
+        if (this.length == 0) {
+            return hash;
+        }
+        for (var i = 0; i < this.length; i++) {
+            var char = this.charCodeAt(i);
+            hash = ((hash<<5)-hash)+char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash;
+    };
 
     /* Information about the current room */
     $scope.roomid = '0001';
@@ -12,15 +25,15 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
     /* video connections */
     $scope.localVideo = $('#localVideo')[0];
-    $scope.remoteVideo = $('#remoteVideo')[0];
     $scope.localStream = null;
 
     
-    // $scope.peerConnection = {};
+    $scope.peerConnection = {};
 
     // New way to handle connections
     $scope.connections = [];
     $scope.remoteStreams = [];
+    $scope.userStreamIds = [];
 
 
     /* Constants to help build connections */
@@ -71,6 +84,8 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
         if (!$rootScope.socket.hasListeners('start_call')) {
             $rootScope.socket.on('start_call', (message) => {
+                $scope.userStreamIds.push({username: message.from, id: message.data.id});
+
                 if($scope.localStream !== null){
                     $scope.start(true, message.from);
                 }
@@ -84,7 +99,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
         if (!$rootScope.socket.hasListeners('rtc')) {
             $rootScope.socket.on('rtc', (message) => {
-                if(message.from !== $rootScope.username) {
+                if(message.from !== $rootScope.username && $scope.localStream !== null){
                     $scope.gotMessageFromServer(message);
                 }
             });
@@ -115,14 +130,14 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
                     // Success:
                     $scope.localStream = stream;
-                    if ("srcObject" in $scope.localVideo) {
+                    if ('srcObject' in $scope.localVideo) {
                         $scope.localVideo.srcObject = stream;
                     } else {
                         // Avoid using this in new browsers, as it is going away.
                         $scope.localVideo.src = window.URL.createObjectURL(stream);
                     }
 
-                    $scope.send('start_call');
+                    $scope.send('start_call', {id: $scope.localStream.id});
                     for(var i = 0; i < $scope.users.length; i++) {
                         $scope.start(false, $scope.users[i].username);
                     }
@@ -135,9 +150,14 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         }
     };
 
-    $scope.closeConnection = function(event){
-        console.log('in on close');
-        console.log(event);
+    $scope.stateChange = function(event){
+        console.log('in stateChange');
+        //todo
+        //for(var i=0; i<$scope.connections.length; i++){
+        //    if($scope.connections[i].iceConnectionState === 'completed'){
+        //        console.log('Closed connection with:', i);
+        //    }
+        //}
     };
 
 
@@ -146,20 +166,23 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
             var temp = new RTCPeerConnection($scope.peerConnectionConfig);
             temp.onicecandidate = $scope.gotIceCandidate;
             temp.onaddstream = $scope.gotRemoteStream;
-            temp.oniceconnectionstatechange = $scope.closeConnection;
+            temp.oniceconnectionstatechange = $scope.stateChange;
             $scope.localStream.getTracks().forEach( (track) => {
                 temp.addTrack(track, $scope.localStream);
             });
 
+            var streamID = '';
+
             if(isCaller) {
                 console.log('Is Caller');
+                streamID = $scope.userStreamIds[username];
                 temp.createOffer($scope.gotDescription, $scope.createOfferError);
             }
 
-            // Array format
-            $scope.connections.push(temp);
-            //object format
-            //$scope.peerConnection[username] = temp;
+            //$scope.connections.push({peer: temp, id: streamID, username: username});
+            $scope.peerConnection[username] = {peer: temp, id: streamID};
+
+            console.log($scope.peerConnection);
 
         } // if - don't call ourself
     }; // start
@@ -171,32 +194,56 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         $state.go('lobby');
     };
 
+    $scope.getIdFromDescription = function(description){
+        //console.log($scope.userStreamIds);
+        
+        var format = '0123456789abcdefghijklmnopqrstuvwxyz';
+        var sdp = description.sdp;
+        var wmsLoc = sdp.indexOf('WMS');
+        var keyLoc = wmsLoc + 4;
+        return sdp.substring(keyLoc, keyLoc + format.length);
+    };
 
+    $scope.getFingerPrintFromDescription = function(description){
+        var sdp = description.sdp;
+        var fingerPrintLoc = sdp.indexOf('fingerprint');
+        var keyLoc = fingerPrintLoc + 20;
+        var key = sdp.substring(keyLoc, keyLoc + 95);
+        console.log(key);
+    };
 
     $scope.gotDescription = function(description) {
-    	console.log('got description');
+        $scope.getFingerPrintFromDescription(description);
+        //$scope.connections[$scope.connections.length - 1].peer.setLocalDescription(description, function() {
+        //    $scope.send('rtc', {
+        //        'sdp': description
+        //    });
+        //}, function(){
+        //    console.log('set description error')
+        //});
+        //console.log('user list');
+        //console.log($scope.userStreamIds);
+        //console.log($scope.getIdFromDescription(description));
 
-        $scope.connections[$scope.connections.length -1].setLocalDescription(description, function() {
-            $scope.send('rtc', {
-                'sdp': description
-            });
-        }, function(){
-            console.log('set description error')
-        });
-        
-        /*
-    	$scope.peerConnection[description.username].setLocalDescription(description, function() {
-    		$scope.send('rtc', {
-    			'sdp': description
-    		});
-    	}, function() {
-    		console.log('set description error')
-    	});*/
+        console.log(description);
+
+        for(var user in $scope.peerConnection){
+            if($scope.peerConnection[user].peer.localDescription !== undefined){
+                $scope.peerConnection[user].peer.setLocalDescription(description, function() {
+                    $scope.send('rtc', {
+                        'sdp': description
+                    });
+                }, function(error){
+                    console.log('set description error');
+                    console.log(error);
+                });
+            }
+        }
+
     };
 
     $scope.gotIceCandidate = function(event) {
     	if (event.candidate !== null) {
-    		//console.log(event.candidate);
     		$scope.send('rtc', {
     			'ice': event.candidate
     		});
@@ -204,22 +251,29 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     };
 
     $scope.gotRemoteStream = function(event) {
-    	console.log('got remote stream');
-    	//console.log(event);
-    	//$scope.remoteVideo.src = window.URL.createObjectURL(event.stream);
+        var id = $scope.getIdFromDescription(event.target.remoteDescription);
+        
+        console.log('Got stream: ', id);
+        
+        var html =  '<div class="col-md-2"><div class="margin-xs"><video id="remoteVideo-' + id + '" autoplay height="100%" width="100%"></video></div></div>';
 
-        var id = Math.floor(8888 * Math.random()) + 1111;
-        var html =  '<dragDiv><video id="remoteVideo-' + id + '" autoplay height="100%" width="100%"></video></dragDiv>';
-
-        $('#remoteVideo-' + id)[0].src = window.URL.createObjectURL(event.stream);
-
+        //add element to video container
         var element = $('#videoContainer');
-        element.html(element.html() + html);
+        element.append(html);
+        
+        // add video stream to new element
+        element = $('#remoteVideo-' + id)[0];
+        $scope.remoteStreams.push(element);
+
+        if ('srcObject' in element) {
+            console.log('test');
+            element.srcObject = event.stream;
+        } else {
+            // Avoid using this in new browsers, as it is going away.
+            element.src = window.URL.createObjectURL(event.stream);
+        }
     };
 
-    $scope.refreshDraggable = function(){
-        $('dragDiv').draggable();
-    };
 
     $scope.createOfferError = function(error) {
     	console.log(error);
@@ -231,32 +285,33 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
     $scope.gotMessageFromServer = function(message) {
         var signal = message.data;
-        if (signal.sdp) {
-            $scope.connections[$scope.connections.length - 1].setRemoteDescription(new RTCSessionDescription(signal.sdp), function () {
-                if (signal.sdp.type === 'offer') {
-                    console.log('Creating Answer');
-                    $scope.connections[$scope.connections.length - 1].createAnswer($scope.gotDescription, $scope.createAnswerError);
-                }
-            });
-        } else if (signal.ice) {
-            console.log('Adding Ice Candidate');
-            $scope.connections[$scope.connections.length - 1].addIceCandidate(new RTCIceCandidate(signal.ice));
-        }
 
         
-        /*
         if (signal.sdp) {
-            $scope.peerConnection[message.from].setRemoteDescription(new RTCSessionDescription(signal.sdp), function () {
+            $scope.peerConnection[message.from].peer.setRemoteDescription(new RTCSessionDescription(signal.sdp), function () {
                 if (signal.sdp.type === 'offer') {
-                    console.log('Creating Answer');
-                    $scope.peerConnection[message.from].createAnswer($scope.gotDescription, $scope.createAnswerError);
+                    $scope.peerConnection[message.from].peer.createAnswer($scope.gotDescription, $scope.createAnswerError);
                 }
             });
         } else if (signal.ice) {
-            console.log('Adding Ice Candidate');
-            $scope.peerConnection[message.from].addIceCandidate(new RTCIceCandidate(signal.ice));
+            $scope.peerConnection[message.from].peer.addIceCandidate(new RTCIceCandidate(signal.ice));
+        }
+        
+            
+
+        /*
+        if (signal.sdp) {
+            $scope.connections[$scope.connections.length - 1].peer.setRemoteDescription(new RTCSessionDescription(signal.sdp), function () {
+                if (signal.sdp.type === 'offer') {
+                    $scope.connections[$scope.connections.length - 1].peer.createAnswer($scope.gotDescription, $scope.createAnswerError);
+                }
+            });
+        } else if (signal.ice) {
+            $scope.connections[$scope.connections.length - 1].peer.addIceCandidate(new RTCIceCandidate(signal.ice));
         }
         */
+        
+        
     };
 
 
