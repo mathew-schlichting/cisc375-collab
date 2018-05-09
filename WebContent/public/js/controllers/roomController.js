@@ -188,7 +188,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
             //$scope.connections.push({peer: temp, id: streamID, username: username});
             $scope.peerConnection[username] = {peer: temp, id: streamID};
 
-            console.log($scope.peerConnection);
+            //console.log($scope.peerConnection);
 
         } // if - don't call ourself
     }; // start
@@ -201,8 +201,6 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     };
 
     $scope.getIdFromDescription = function(description){
-        //console.log($scope.userStreamIds);
-
         var format = '0123456789abcdefghijklmnopqrstuvwxyz';
         var sdp = description.sdp;
         var wmsLoc = sdp.indexOf('WMS');
@@ -214,37 +212,19 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         var sdp = description.sdp;
         var fingerPrintLoc = sdp.indexOf('fingerprint');
         var keyLoc = fingerPrintLoc + 20;
-        var key = sdp.substring(keyLoc, keyLoc + 95);
-        console.log(key);
+        return sdp.substring(keyLoc, keyLoc + 95);
     };
 
+
     $scope.gotDescription = function(description, username) {
-        $scope.getFingerPrintFromDescription(description);
-        //$scope.connections[$scope.connections.length - 1].peer.setLocalDescription(description, function() {
-        //    $scope.send('rtc', {
-        //        'sdp': description
-        //    });
-        //}, function(){
-        //    console.log('set description error')
-        //});
-        //console.log('user list');
-        //console.log($scope.userStreamIds);
-        //console.log($scope.getIdFromDescription(description));
-
-        console.log(description, username);
-
-        for(var user in $scope.peerConnection){
-            if($scope.peerConnection[user].peer.localDescription !== undefined){
-                $scope.peerConnection[user].peer.setLocalDescription(description, function() {
-                    $scope.send('rtc', {
-                        'sdp': description
-                    });
-                }, function(error){
-                    console.log('set description error');
-                    console.log(error);
+        $scope.peerConnection[username].peer.setLocalDescription(description, function() {
+                $scope.send('rtc', {
+                    'sdp': description
                 });
-            }
-        }
+            }, function(error){
+                console.log('set description error');
+                console.log(error);
+        });
     };
 
     $scope.gotIceCandidate = function(event) {
@@ -257,8 +237,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
     $scope.gotRemoteStream = function(event) {
         var id = $scope.getIdFromDescription(event.target.remoteDescription);
-
-        console.log('Got stream: ', id);
+        console.log('Received Stream: ', id);
 
         var html =  '<div class="col-md-2"><div class="margin-xs"><video id="remoteVideo-' + id + '" autoplay height="100%" width="100%"></video></div></div>';
 
@@ -271,7 +250,6 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         $scope.remoteStreams.push(element);
 
         if ('srcObject' in element) {
-            console.log('test');
             element.srcObject = event.stream;
         } else {
             // Avoid using this in new browsers, as it is going away.
@@ -299,28 +277,14 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
                     .then((answer) => {
                         $scope.gotDescription(answer, message.from);
                     })
-                    .catch($scope.createAnswerError(error));
+                    .catch((error) => {
+                        $scope.createAnswerError(error);
+                    });
                 }
             });
         } else if (signal.ice) {
             $scope.peerConnection[message.from].peer.addIceCandidate(new RTCIceCandidate(signal.ice));
         }
-
-
-
-        /*
-        if (signal.sdp) {
-            $scope.connections[$scope.connections.length - 1].peer.setRemoteDescription(new RTCSessionDescription(signal.sdp), function () {
-                if (signal.sdp.type === 'offer') {
-                    $scope.connections[$scope.connections.length - 1].peer.createAnswer($scope.gotDescription, $scope.createAnswerError);
-                }
-            });
-        } else if (signal.ice) {
-            $scope.connections[$scope.connections.length - 1].peer.addIceCandidate(new RTCIceCandidate(signal.ice));
-        }
-        */
-
-
     };
 
 

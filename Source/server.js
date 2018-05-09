@@ -170,8 +170,8 @@ function broadcastInLobby(type, from, data) {
 }
 
 function broadcastInRoom(roomid, type, from, data) {
-	for (var p in people) {
-		if (people[p] && people[p].client !== null && people[p].client.connected && people[p].room === roomid) {
+   	for (var p in people) {
+		if (people[p] && people[p].client !== null && people[p].client.connected && Number(people[p].room) === Number(roomid)) {
 			sendData(people[p].client, type, from, data);
 		}
 	}
@@ -187,7 +187,7 @@ function createMessage(from, data) {
 	return {
 		from: from,
 		data: data
-	}; //JSON.stringify({from: from, data: data});
+	};
 }
 
 function sendData(client, type, from, data) {
