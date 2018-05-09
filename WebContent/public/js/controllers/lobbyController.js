@@ -71,8 +71,10 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 					roomid: id
 				});
 				$scope.joinRoom(id);
+				console.log("joined room");
 			} else {
 				$scope.createRoom();
+				console.log("created room");
 			}
 		});
 	};
