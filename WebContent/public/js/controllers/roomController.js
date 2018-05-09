@@ -217,20 +217,14 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
 
     $scope.gotDescription = function(description, username) {
-        console.log(description, username);
-
-        for(var user in $scope.peerConnection){
-            if($scope.peerConnection[user].peer.localDescription !== undefined){
-                $scope.peerConnection[user].peer.setLocalDescription(description, function() {
-                    $scope.send('rtc', {
-                        'sdp': description
-                    });
-                }, function(error){
-                    console.log('set description error');
-                    console.log(error);
-                });
-            }
-        }
+        $scope.peerConnection[username].peer.setLocalDescription(description, function() {
+            $scope.send('rtc', {
+                'sdp': description
+            });
+        }, function(error){
+            console.log('set description error');
+            console.log(error);
+        });
     };
 
     $scope.gotIceCandidate = function(event) {
@@ -284,8 +278,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
                         $scope.gotDescription(answer, message.from);
                     })
                     .catch((error) => {
-                        //$scope.createAnswerError(error);
-                        console.log(error);
+                        $scope.createAnswerError(error);
                     });
                 }
             });

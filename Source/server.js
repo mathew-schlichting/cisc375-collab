@@ -80,6 +80,7 @@ function createNewUser(user, color, client) {
 	people[user] = {
 		username: user,
 		color: color,
+		drawing: {clickX: [], clickY: [], clickSize: [], clickColor: [], clickDrag: []},
 		room: null,
 		client: client
 	};
@@ -155,6 +156,65 @@ function createNewRoom(roomid) {
 }
 
 /*************************************** ****************************/
+
+
+
+
+function updateDrawing(username, data){
+	people[username].drawing = data.drawing;
+	var masterList = {clickX: [], clickY: [], clickSize: [], clickColor: [], clickDrag: []};
+
+	for(var user in people){
+		masterList.clickX.push(people[user].drawing.clickX);
+		masterList.clickY.push(people[user].drawing.clickY);
+		masterList.clickSize.push(people[user].drawing.clickSize);
+		masterList.clickColor.push(people[user].drawing.clickColor);
+		masterList.clickDrag.push(people[user].drawing.clickDrag);
+	}
+
+	broadcastInRoom(people[username].room, 'update_drawing', 'server', {drawing: masterList});
+}
+
+/*
+		implement this in canvasController
+
+
+		// add in init
+		if (!$rootScope.socket.hasListeners('update_drawing')) {
+			$rootScope.socket.on('update_drawing', (message) => {
+				$scope.masterDrawing = message.data.drawing;
+				$scope.redraw();
+ 			});
+ 		}
+
+		//update to variables
+		 $scope.userDrawing = {clickX: [], clickY: [], clickSize: [], clickColor: [], clickDrag: []};
+		 $scope.masterDrawing = {clickX: [], clickY: [], clickSize: [], clickColor: [], clickDrag: []};
+
+
+		when a user draws add it such that
+		 		$scope.userDrawing.clickX.push...
+ 				$scope.userDrawing.clickY.push...
+ 				etc..
+ 				
+ 				
+ 		$scope.redraw
+ 			switch all of...
+ 				$scope.clickX 	to 	$scope.masterDrawing.clickX
+ 				$scope.clickY 	to 	$scope.masterDrawing.clickY
+ 				etc..
+
+
+		anything that changes the users drawing (click, mouse move, and clear canvas)
+		never call redraw 
+		add
+			$scope.send('update_drawing', {drawing: $scope.userDrawing});
+
+
+ */
+
+
+
 
 
 
@@ -255,6 +315,10 @@ function initSocketIO() {
 
 		client.on('start_call', (message) => {
 			broadcastInRoom(people[message.from].room, 'start_call', message.from, message.data);
+		});
+
+		client.on('update_drawing', (message) => {
+			updateDrawing(message.data);
 		});
 
 
