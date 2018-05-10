@@ -1,13 +1,22 @@
 function canvasControllerFunction($scope, $state, $rootScope, $compile) {
+    $scope.userDrawing = {
+        clickX: [],
+        clickY: [],
+        clickSize: [],
+        clickColor: [],
+        clickDrag: []
+    };
+    $scope.masterDrawing = {
+        clickX: [],
+        clickY: [],
+        clickSize: [],
+        clickColor: [],
+        clickDrag: []
+    };
 
     $scope.paper = null;
     $scope.context = null;
-    $scope.clickColor   = [];
-    $scope.clickSize    = [];
     $scope.curTool      = 'pen';
-    $scope.clickX       = [];
-    $scope.clickY       = [];
-    $scope.clickDrag    = [];
     $scope.paint        = false;
     $scope.cursize      = 2;
     $scope.curColor     = 'white';
@@ -27,6 +36,13 @@ function canvasControllerFunction($scope, $state, $rootScope, $compile) {
     ];
 
     $scope.init = function(){
+        if (!$rootScope.socket.hasListeners('update_drawing')) {
+            $rootScope.socket.on('update_drawing', (message) => {
+                $scope.masterDrawing = message.data.drawing;
+            $scope.redraw();
+            });
+        }
+
         $('.selectedColor').trigger('click');
 
         $scope.paper        = $('#drawing')[0];
@@ -65,30 +81,38 @@ function canvasControllerFunction($scope, $state, $rootScope, $compile) {
     $scope.startDrawing = function(e){
         $scope.paint = true;
         $scope.addClick(e.clientX - $scope.paper.getBoundingClientRect().left, e.clientY - $scope.paper.getBoundingClientRect().top, false);
-        $scope.redraw();
+        $scope.send('update_drawing', {drawing: $scope.userDrawing});
+        //$scope.redraw();
         $('body').css('cursor', 'default');
     };
 
     $scope.drawMore = function(e) {
         if ($scope.paint) {
             $scope.addClick(e.clientX - $scope.paper.getBoundingClientRect().left, e.clientY - $scope.paper.getBoundingClientRect().top, true);
-            $scope.redraw();
+            $scope.send('update_drawing', {drawing: $scope.userDrawing});
+            //$scope.redraw();
             $('body').css('cursor', 'default');
         }
     };
 
     $scope.addClick = function(x, y, dragging){
-        $scope.clickX.push(x);
-        $scope.clickY.push(y);
-        $scope.clickDrag.push(dragging);
+        $scope.userDrawing.clickX.push(x);
+        //$scope.clickX.push(x);
+        $scope.userDrawing.clickY.push(y);
+        //$scope.clickY.push(y);
+        $scope.userDrawing.clickDrag.push(dragging);
+        //$scope.clickDrag.push(dragging);
 
         if ($scope.curTool === "eraser") {
-            $scope.clickColor.push("white");
+            $scope.userDrawing.clickColor.push("white");
+            //$scope.clickColor.push("white");
         } else {
-            $scope.clickColor.push($scope.curColor);
+            $scope.userDrawing.clickColor.push($scope.curColor);
+            //$scope.clickColor.push($scope.curColor);
         }
 
-        $scope.clickSize.push($scope.cursize);
+        $scope.userDrawing.clickSize.push($scope.cursize);
+        //$scope.clickSize.push($scope.cursize);
     };
 
     $scope.stopDrawing = function (){
@@ -104,11 +128,12 @@ function canvasControllerFunction($scope, $state, $rootScope, $compile) {
 
     $scope.clearCanvas = function(){
         $scope.context.clearRect(0, 0, $scope.paper.width, $scope.paper.height);
-        $scope.clickX     = [];
-        $scope.clickY     = [];
-        $scope.clickDrag  = [];
-        $scope.clickColor = [];
-        $scope.clickSize  = [];
+        $scope.userDrawing.clickX     = [];
+        $scope.userDrawing.clickY     = [];
+        $scope.userDrawing.clickDrag  = [];
+        $scope.userDrawing.clickColor = [];
+        $scope.userDrawing.clickSize  = [];
+        $scope.send('update_drawing', {drawing: $scope.userDrawing});
     };
 
     $scope.toPen = function(){
@@ -141,7 +166,7 @@ function canvasControllerFunction($scope, $state, $rootScope, $compile) {
         $scope.blue = 255;
     };
 
-        // Each time this function is called, the canvas records/draws the new marks
+    // Each time this function is called, the canvas records/draws the new marks
     $scope.redraw = function () {
         $scope.context.save();
         $scope.context.beginPath();
@@ -150,17 +175,17 @@ function canvasControllerFunction($scope, $state, $rootScope, $compile) {
 
         $scope.context.lineJoin = "round";
 
-        for (var i = 0; i < $scope.clickX.length; i++) {
+        for (var i = 0; i < $scope.masterDrawing.clickX.length; i++) {
             $scope.context.beginPath();
-            if ($scope.clickDrag[i] && i) {
-                $scope.context.moveTo($scope.clickX[i - 1], $scope.clickY[i - 1]);
+            if ($scope.masterDrawing.clickDrag[i] && i) {
+                $scope.context.moveTo($scope.masterDrawing.clickX[i - 1], $scope.masterDrawing.clickY[i - 1]);
             } else {
-                $scope.context.moveTo($scope.clickX[i] - 1, $scope.clickY[i]);
+                $scope.context.moveTo($scope.masterDrawing.clickX[i] - 1, $scope.masterDrawing.clickY[i]);
             }
-            $scope.context.lineTo($scope.clickX[i], $scope.clickY[i]);
+            $scope.context.lineTo($scope.masterDrawing.clickX[i], $scope.masterDrawing.clickY[i]);
             $scope.context.closePath();
-            $scope.context.strokeStyle = $scope.clickColor[i];
-            $scope.context.lineWidth = parseInt($scope.clickSize[i]);
+            $scope.context.strokeStyle = $scope.masterDrawing.clickColor[i];
+            $scope.context.lineWidth = parseInt($scope.masterDrawing.clickSize[i]);
             $scope.context.stroke();
         }
 
