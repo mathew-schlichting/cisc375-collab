@@ -14,7 +14,6 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     $scope.localStream = null;
     $scope.remoteStreams = [];
     $scope.peerConnection = {};
-    
 
     /* Constants to help build connections */
     $scope.constraints = {
@@ -70,6 +69,15 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
             });
         }
 
+        if (!$rootScope.socket.hasListeners('stop_streaming')) {
+            $rootScope.socket.on('stop_streaming', (message) => {
+                if($scope.localStream !== null && $rootScope.username !== message.from){
+                    $scope.closeUserStream(message.from);
+                }
+            });
+        }
+
+
         var element = $('#nav-section');
         element.html('<div class="btn btn-danger" ng-click="leaveRoom();">Leave Room</div>');
         $compile(element.contents())($scope);
@@ -85,6 +93,11 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     }; // init
 
 
+    $scope.closeUserStream = function (username) {
+        console.log('Trying to close user stream...');
+        $('#remoteVideo-' + username)[0].srcObject = undefined;
+    };
+
     $scope.setupStream = function(){
         $scope.loadLocalVideo();
     };
@@ -92,6 +105,18 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     $scope.closeStream = function(){
         if($scope.localStream !== null){
             $scope.localStream.getTracks().forEach(track => track.stop());
+            $scope.send('stop_streaming');
+
+            $scope.localVideo.srcObject = undefined;
+
+            for(var user in $scope.users){
+                if($scope.users[user].username !== $rootScope.username){
+                    $('#remoteVideo-' + $scope.users[user].username)[0].srcObject = undefined;
+                }
+            }
+            //for(user in $scope.peerConnection){
+            //    $scope.peerConnection[user].stream.getTracks().forEach(track => track.stop);
+            //}
         }
     };
 
@@ -113,29 +138,16 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
                 $scope.localVideo.src = window.URL.createObjectURL(stream);
             }
 
-            $scope.send('start_streaming');
-            $scope.send('start_call', {id: $scope.localStream.id});
+            $scope.send('start_streaming', {id: $scope.localStream.id});
+            $scope.send('start_call');
             for(var i = 0; i < $scope.users.length; i++) {
                 $scope.start(false, $scope.users[i].username);
             }
         }, (error) => {
-            console.log(error);
+            console.log('Load local video error: ', error);
         });
     };
 
-    $scope.stateChange = function(event){
-        //todo
-        //for(var i=0; i<$scope.connections.length; i++){
-        //    if($scope.connections[i].iceConnectionState === 'completed'){
-        //        console.log('Closed connection with:', i);
-        //    }
-        //}
-    };
-
-
-    $scope.createConnection = function (username){
-
-    };
 
     $scope.start = (isCaller, username) => {
         if($rootScope.username !== username) {
@@ -144,7 +156,6 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
             temp = new RTCPeerConnection($scope.peerConnectionConfig);
             temp.onicecandidate = $scope.gotIceCandidate;
             temp.onaddstream = $scope.gotRemoteStream;
-            temp.oniceconnectionstatechange = $scope.stateChange;
             $scope.localStream.getTracks().forEach( (track) => {
                 temp.addTrack(track, $scope.localStream);
             });
@@ -177,14 +188,11 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
                 'sdp': description
             });
         }, function(error){
-            console.log('set description error');
-            console.log(error);
+            console.log('Set description error: ', error);
         });
     };
 
     $scope.gotIceCandidate = function(event) {
-        console.log(event);
-        
     	if (event.candidate !== null) {
     		$scope.send('rtc', {
     			'ice': event.candidate
@@ -193,34 +201,42 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     };
 
     $scope.gotRemoteStream = function(event) {
-        var id = event.stream.id;
-        console.log('Received Stream: ', id);
-        
-        var html =  '<div class="col-md-2"><div class="margin-xs"><video id="remoteVideo-' + id + '" autoplay height="100%" width="100%"></video></div></div>';
+        for(user in $scope.users){
+            if($scope.users[user].streamid === event.stream.id){
+                console.log('Received Stream From: ', $scope.users[user].username);
+                var id = $scope.users[user].username;
+            }
+        }
 
-        //add element to video container
-        var element = $('#videoContainer');
-        element.append(html);
+        var remoteVideo = document.getElementById('remoteVideo-' + id);
+
+        if(remoteVideo === null) {
+            //add element to video container
+            var html = '<div class="col-md-2"><div class="margin-xs"><video id="remoteVideo-' + id + '" autoplay height="100%" width="100%"></video></div></div>';
+            $('#videoContainer').append(html);
+            remoteVideo = $('#remoteVideo-' + id)[0];
+        }
 
         // add video stream to new element
-        element = $('#remoteVideo-' + id)[0];
         $scope.remoteStreams.push(event.stream);
+        
+        console.log(event.stream);
 
-        if ('srcObject' in element) {
-            element.srcObject = event.stream;
+        if ('srcObject' in remoteVideo) {
+            remoteVideo.srcObject = event.stream;
         } else {
-            element.src = window.URL.createObjectURL(event.stream);
+            remoteVideo.src = window.URL.createObjectURL(event.stream);
         }
         
     };
 
 
     $scope.createOfferError = function(error) {
-    	console.log(error);
+    	console.log('Create offer error: ', error);
     };
 
     $scope.createAnswerError = function(error){
-        console.log(error);
+        console.log('Create answer error: ', error);
     };
 
     $scope.gotMessageFromServer = function(message) {
@@ -280,7 +296,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
     $scope.receivedTextMessage = function(message, color) {
         var element = $('#messageList');
-        element.html(element.html() + '<li class="list-group-item message"><div id="temp-color" class="user-color"></div><div class="pull-right">' + message + '</div></li>');
+        element.append('<li class="' + 'list-group-item' + ' message"><div id="temp-color" class="user-color"></div><div class="pull-right">' + message + '</div></li>');
         $compile(element.contents())($scope);
 
         element = $('#temp-color');

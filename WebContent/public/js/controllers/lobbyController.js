@@ -27,7 +27,9 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
             $rootScope.socket.on('rooms_list', (message) => {
 				$scope.rooms = [];
 				console.log('loading rooms');
-                $scope.loadRooms(message.data);
+				for(var r in message.data){
+					$scope.rooms.push({id: r, users: message.data[r].users});
+				}
                 $scope.$apply()
             });
         }
@@ -42,16 +44,8 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 	};
 
 	$scope.makeLobbyCalls = function() {
-		$scope.send('leave_room');
 		$scope.send('request_rooms', {});
 	};
-
-
-    $scope.loadRooms = function (rooms) {
-        for(var r in rooms){
-            $scope.rooms.push({id: r, users: rooms[r].users});
-        }
-    };
 
 	$scope.joinRoom = function(id) {
 		$scope.send('join_room', {

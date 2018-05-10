@@ -83,7 +83,7 @@ function createNewUser(user, color, client) {
 		drawing: {clickX: [], clickY: [], clickSize: [], clickColor: [], clickDrag: []},
 		room: null,
 		client: client,
-		streaming: false
+		streamid: 0
 	};
 }
 
@@ -119,7 +119,7 @@ function getUserList(roomid) {
 			result.push({
 				username: rooms[roomid].users[i],
 				color: getColorFor(rooms[roomid].users[i]),
-				streaming: people[rooms[roomid].users[i]].streaming
+				streamid: people[rooms[roomid].users[i]].streamid
 			});
 		}
 	}
@@ -170,55 +170,15 @@ function updateDrawing(username, data){
 	var masterList = {clickX: [], clickY: [], clickSize: [], clickColor: [], clickDrag: []};
 
 	for(var user in people){
-		masterList.clickX.push(people[user].drawing.clickX);
-		masterList.clickY.push(people[user].drawing.clickY);
-		masterList.clickSize.push(people[user].drawing.clickSize);
-		masterList.clickColor.push(people[user].drawing.clickColor);
-		masterList.clickDrag.push(people[user].drawing.clickDrag);
+		masterList.clickX = masterList.clickX.concat(people[user].drawing.clickX);
+		masterList.clickY = masterList.clickY.concat(people[user].drawing.clickY);
+		masterList.clickSize = masterList.clickSize.concat(people[user].drawing.clickSize);
+		masterList.clickColor = masterList.clickColor.concat(people[user].drawing.clickColor);
+		masterList.clickDrag = masterList.clickDrag.concat(people[user].drawing.clickDrag);
 	}
 
 	broadcastInRoom(people[username].room, 'update_drawing', 'server', {drawing: masterList});
 }
-
-/*
-		implement this in canvasController
-
-
-		// add in init
-		if (!$rootScope.socket.hasListeners('update_drawing')) {
-			$rootScope.socket.on('update_drawing', (message) => {
-				$scope.masterDrawing = message.data.drawing;
-				$scope.redraw();
- 			});
- 		}
-
-		//update to variables
-		 $scope.userDrawing = {clickX: [], clickY: [], clickSize: [], clickColor: [], clickDrag: []};
-		 $scope.masterDrawing = {clickX: [], clickY: [], clickSize: [], clickColor: [], clickDrag: []};
-
-
-		when a user draws add it such that
-		 		$scope.userDrawing.clickX.push...
- 				$scope.userDrawing.clickY.push...
- 				etc..
- 				
- 				
- 		$scope.redraw
- 			switch all of...
- 				$scope.clickX 	to 	$scope.masterDrawing.clickX
- 				$scope.clickY 	to 	$scope.masterDrawing.clickY
- 				etc..
-
-
-		anything that changes the users drawing (click, mouse move, and clear canvas)
-		never call redraw 
-		add
-			$scope.send('update_drawing', {drawing: $scope.userDrawing});
-
-
- */
-
-
 
 
 
@@ -322,12 +282,17 @@ function initSocketIO() {
 			broadcastInRoom(people[message.from].room, 'start_call', message.from, message.data);
 		});
 
-		client.on('update_drawing', (message) => {
-			updateDrawing(message.data);
+		client.on('update_user_drawing', (message) => {
+			updateDrawing(message.from, message.data);
 		});
 
 		client.on('start_streaming', (message) => {
-			people[message.from].streaming = true;
+			people[message.from].streamid = message.data.id;
+			broadcastInRoom(people[message.from].room, 'user_list', 'server', getUserList(people[message.from].room));
+		});
+
+		client.on('stop_streaming', (message) => {
+			broadcastInRoom(people[message.from].room, 'stop_streaming', message.from, message.data);
 		});
 
 

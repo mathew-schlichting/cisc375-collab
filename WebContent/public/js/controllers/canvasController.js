@@ -81,7 +81,7 @@ function canvasControllerFunction($scope, $state, $rootScope, $compile) {
     $scope.startDrawing = function(e){
         $scope.paint = true;
         $scope.addClick(e.clientX - $scope.paper.getBoundingClientRect().left, e.clientY - $scope.paper.getBoundingClientRect().top, false);
-        $scope.send('update_drawing', {drawing: $scope.userDrawing});
+        $scope.send('update_user_drawing', {drawing: $scope.userDrawing});
         //$scope.redraw();
         $('body').css('cursor', 'default');
     };
@@ -89,7 +89,7 @@ function canvasControllerFunction($scope, $state, $rootScope, $compile) {
     $scope.drawMore = function(e) {
         if ($scope.paint) {
             $scope.addClick(e.clientX - $scope.paper.getBoundingClientRect().left, e.clientY - $scope.paper.getBoundingClientRect().top, true);
-            $scope.send('update_drawing', {drawing: $scope.userDrawing});
+            $scope.send('update_user_drawing', {drawing: $scope.userDrawing});
             //$scope.redraw();
             $('body').css('cursor', 'default');
         }
@@ -133,7 +133,7 @@ function canvasControllerFunction($scope, $state, $rootScope, $compile) {
         $scope.userDrawing.clickDrag  = [];
         $scope.userDrawing.clickColor = [];
         $scope.userDrawing.clickSize  = [];
-        $scope.send('update_drawing', {drawing: $scope.userDrawing});
+        $scope.send('update_user_drawing', {drawing: $scope.userDrawing});
     };
 
     $scope.toPen = function(){
