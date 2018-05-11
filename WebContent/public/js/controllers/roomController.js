@@ -25,16 +25,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         offerToReceiveAudio: 1,
         offerToReceiveVideo: 1
     };
-
-    $scope.peerConnectionConfig = {
-        'iceServers': [{
-            'url': 'stun:stun.services.mozilla.com'
-        },
-            {
-                'url': 'stun:stun.l.google.com:19302'
-            }
-        ]
-    };
+    
 
 
     // We'll want to use adapterjs to avoid the following lines:
@@ -44,6 +35,8 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     window.RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
 
     $scope.init = function() {
+        $rootScope.prevPage = 'room';
+        
         $scope.roomid = $stateParams.roomid;
 
         $scope.send('request_users');
@@ -153,7 +146,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         if($rootScope.username !== username) {
             var temp;
             
-            temp = new RTCPeerConnection($scope.peerConnectionConfig);
+            temp = new RTCPeerConnection();
             temp.onicecandidate = $scope.gotIceCandidate;
             temp.onaddstream = $scope.gotRemoteStream;
             $scope.localStream.getTracks().forEach( (track) => {
@@ -296,7 +289,7 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
     $scope.receivedTextMessage = function(message, color) {
         var element = $('#messageList');
-        element.append('<li class="' + 'list-group-item' + ' message"><div id="temp-color" class="user-color"></div><div class="pull-right">' + message + '</div></li>');
+        element.append('<li class="list-group-item message"><div id="temp-color" class="user-color"></div><div class="pull-right" style="height: auto;">' + message + '</div></li>');
         $compile(element.contents())($scope);
 
         element = $('#temp-color');
@@ -304,6 +297,12 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         element.css('background-color', color);
         element.attr('id', '');
         $compile(element.contents())($scope);
+    };
+
+    $scope.messageKeyup = function(event){
+        if(event.keyCode === 13){
+            $scope.sendMessage();
+        }
     };
 
     $scope.sendMessage = function() {

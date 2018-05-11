@@ -15,13 +15,13 @@ const http = require('http');
 const SocketIO = require('socket.io');
 
 /* Server Variables */
-
-//const options = {
-//	key: fs.readFileSync(path.join(__dirname, 'cisc-dean.stthomas.edu-server.key')),
-//	cert: fs.readFileSync(path.join(__dirname, 'cisc-dean.stthomas.edu-server.crt')),
-//	ca: fs.readFileSync(path.join(__dirname, 'cisc-dean.stthomas.edu-ca.crt'))
-//};
-
+/*
+const options = {
+	key: fs.readFileSync(path.join(__dirname, 'cisc-dean.stthomas.edu-server.key')),
+	cert: fs.readFileSync(path.join(__dirname, 'cisc-dean.stthomas.edu-server.crt')),
+	ca: fs.readFileSync(path.join(__dirname, 'cisc-dean.stthomas.edu-ca.crt'))
+};
+*/
 
 
 const port = '8018';

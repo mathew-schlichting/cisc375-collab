@@ -9,7 +9,7 @@ function loginControllerFunction($scope, $state, $rootScope) {
 
 
     $scope.init = function(){
-
+        $rootScope.prevPage = 'login';
 
     };
     

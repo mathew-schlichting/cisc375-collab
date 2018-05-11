@@ -16,7 +16,7 @@
     </div>
 
     <div class="row">
-        <div class="col-md-3 text-center">
+        <div class="col-md-2 text-center">
             <h4 class=" full-size text-center">
                 Users:
             </h4>
@@ -45,24 +45,27 @@
     </div>
 
     <div class="row">
-        <div ng-include="'html/canvas.html'">
-            <!-- loads canvs in here on page load -->
+        <div class="col-md-7">
+            <div ng-include="'html/canvas.html'">
+                <!-- loads canvs in here on page load -->
+            </div>
         </div>
 
 
+
         <!-- Message box -->
-        <div class="col-md-3">
+        <div class="col-md-5">
             <div id="textChat" class="chat-box padding-md">
                 <div class="row">
-                    <div class="col-md-offset-1 col-md-10">
+                    <div class="col-md-10">
                         <div class="panel">
-                            <ul id="messageList" class="list-group"></ul>
+                            <ul id="messageList" class=""></ul> <!--list-group-->
                         </div>
                     </div>
                 </div>
                 <div class="row text-center">
                     <div class="col-sm-12 text-center">
-                        <input class="chat-input" ng-model="message" type="text" name="message" />
+                        <input class="chat-input" ng-model="message" type="text" name="message" ng-keyup="messageKeyup($event);" maxlength="25"/>
                         <button class="btn btn-success chat-input" ng-click="sendMessage();">Send</button>
                     </div>
                 </div>

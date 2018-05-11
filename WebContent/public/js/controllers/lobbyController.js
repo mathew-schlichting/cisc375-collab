@@ -1,17 +1,17 @@
 /**
  * Created by Mathew on 4/30/2018.
  */
-function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
+function lobbyControllerFunction($scope, $state, $rootScope) {
 
     $scope.rooms = [];
 
 	$scope.init = function() {
-
+		$rootScope.prevPage = 'lobby';
+		
         if($rootScope.socket === undefined) {
             $rootScope.socket = io();
         }
-
-
+		
 		if (!$rootScope.socket.hasListeners('init_client')) {
 			$rootScope.socket.on('init_client', (message) => {
 				$scope.send('init_response', {
@@ -26,11 +26,11 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
         if(!$rootScope.socket.hasListeners('rooms_list')) {
             $rootScope.socket.on('rooms_list', (message) => {
 				$scope.rooms = [];
-				console.log('loading rooms');
 				for(var r in message.data){
 					$scope.rooms.push({id: r, users: message.data[r].users});
 				}
                 $scope.$apply()
+
             });
         }
 
@@ -39,8 +39,6 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 		}
 
         $('#nav-section').html('');
-
-
 	};
 
 	$scope.makeLobbyCalls = function() {
