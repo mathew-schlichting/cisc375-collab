@@ -16,6 +16,7 @@ const SocketIO = require('socket.io');
 
 /* Server Variables */
 
+
 const options = {
 	key: fs.readFileSync(path.join(__dirname, 'cisc-dean.stthomas.edu-server.key')),
 	cert: fs.readFileSync(path.join(__dirname, 'cisc-dean.stthomas.edu-server.crt')),
@@ -127,12 +128,11 @@ function getUserList(roomid) {
 }
 
 function joinRoom(roomid, username) {
-    console.log("joinRoom: username = " + username)
+    console.log("joinRoom: username = " + username);
 	rooms[roomid].users.push(username);
 	people[username].room = roomid;
-	broadcastInRoom(roomid, 'user_joined', 'server', {
-		username: username
-	});
+	broadcastInRoom(roomid, 'user_joined', 'server', {username: username});
+	sendToUser(username, 'update_drawing', 'server', {drawing: compileMasterDrawingList()});
 	broadcastInLobby('rooms_list', 'server', getListOfRooms());
 	broadcastInRoom(roomid, 'user_list', 'server', getUserList(roomid));
 }
@@ -167,17 +167,21 @@ function createNewRoom(roomid) {
 
 function updateDrawing(username, data){
 	people[username].drawing = data.drawing;
-	var masterList = {clickX: [], clickY: [], clickSize: [], clickColor: [], clickDrag: []};
+	broadcastInRoom(people[username].room, 'update_drawing', 'server', {drawing: compileMasterDrawingList()});
+}
 
-	for(var user in people){
-		masterList.clickX = masterList.clickX.concat(people[user].drawing.clickX);
-		masterList.clickY = masterList.clickY.concat(people[user].drawing.clickY);
-		masterList.clickSize = masterList.clickSize.concat(people[user].drawing.clickSize);
-		masterList.clickColor = masterList.clickColor.concat(people[user].drawing.clickColor);
-		masterList.clickDrag = masterList.clickDrag.concat(people[user].drawing.clickDrag);
-	}
+function compileMasterDrawingList (){
+    var masterList = {clickX: [], clickY: [], clickSize: [], clickColor: [], clickDrag: []};
 
-	broadcastInRoom(people[username].room, 'update_drawing', 'server', {drawing: masterList});
+    for(var user in people){
+        masterList.clickX = masterList.clickX.concat(people[user].drawing.clickX);
+        masterList.clickY = masterList.clickY.concat(people[user].drawing.clickY);
+        masterList.clickSize = masterList.clickSize.concat(people[user].drawing.clickSize);
+        masterList.clickColor = masterList.clickColor.concat(people[user].drawing.clickColor);
+        masterList.clickDrag = masterList.clickDrag.concat(people[user].drawing.clickDrag);
+    }
+
+    return masterList;
 }
 
 
