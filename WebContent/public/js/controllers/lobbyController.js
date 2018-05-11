@@ -1,16 +1,16 @@
 /**
  * Created by Mathew on 4/30/2018.
  */
-function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
+function lobbyControllerFunction($scope, $state, $rootScope) {
 
     $scope.rooms = [];
 
 	$scope.init = function() {
+		$rootScope.prevPage = 'lobby';
 
         if($rootScope.socket === undefined) {
             $rootScope.socket = io();
         }
-
 
 		if (!$rootScope.socket.hasListeners('init_client')) {
 			$rootScope.socket.on('init_client', (message) => {
@@ -26,9 +26,11 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
         if(!$rootScope.socket.hasListeners('rooms_list')) {
             $rootScope.socket.on('rooms_list', (message) => {
 				$scope.rooms = [];
-				console.log('loading rooms', message.data);
-                $scope.loadRooms(message.data);
+				for(var r in message.data){
+					$scope.rooms.push({id: r, users: message.data[r].users});
+				}
                 $scope.$apply()
+
             });
         }
 
@@ -37,21 +39,11 @@ function lobbyControllerFunction($scope, $state, $rootScope, $compile) {
 		}
 
         $('#nav-section').html('');
-
-
 	};
 
 	$scope.makeLobbyCalls = function() {
-		$scope.send('leave_room');
 		$scope.send('request_rooms', {});
 	};
-
-
-    $scope.loadRooms = function (rooms) {
-        for(var r in rooms){
-            $scope.rooms.push({id: r, users: rooms[r].users});
-        }
-    };
 
 	$scope.joinRoom = function(id) {
 		$scope.send('join_room', {
