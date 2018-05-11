@@ -134,11 +134,14 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
                 $scope.localVideo.src = window.URL.createObjectURL(stream);
             }
 
+
             $scope.send('start_streaming', {id: $scope.localStream.id});
-            $scope.send('start_call');
-            for(var i = 0; i < $scope.users.length; i++) {
+            for(var i=0;i<$scope.users.length;i++){
                 $scope.start(false, $scope.users[i].username);
             }
+            $scope.send('start_call');
+            
+
         }, (error) => {
             console.log('Load local video error: ', error);
         });

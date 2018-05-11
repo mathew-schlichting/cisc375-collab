@@ -9,7 +9,6 @@ const path = require('path');
 /* External Dependencies */
 const express = require('express');
 const favicon = require('serve-favicon');
-const bodyParser = require('body-parser');
 //const http = require('http');
 const https = require('https');
 const SocketIO = require('socket.io');
@@ -57,7 +56,6 @@ function init() {
 
 
 app.use(favicon(path.join(public_dir, 'images', 'favicon.ico')));
-app.use(bodyParser.json());
 
 
 app.use('/', express.static(public_dir));
@@ -302,7 +300,7 @@ function initSocketIO() {
 
         client.emit('init_client', createMessage('server', {id: currentId}));
     });
-
+	
     console.log('Created SocketIO');
 }
 
