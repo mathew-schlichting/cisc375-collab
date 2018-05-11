@@ -24,6 +24,11 @@ collabApp.config(function($stateProvider, $urlRouterProvider) {
 			templateUrl: 'html/login.html',
 			controller: 'loginCtrl'
 		})
+        .state('about', {
+			url: '/about',
+			templateUrl: 'html/about.html',
+            controller: 'aboutCtrl'
+		})
 
 
 }).controller("appCtrl", function($scope, $state, $stateParams, $rootScope) {
@@ -55,7 +60,7 @@ collabApp.config(function($stateProvider, $urlRouterProvider) {
     $scope.init = function (){
         $state.go('login');
     };
-    
+
     $scope.createMessage = function (data){
         return {from: $rootScope.username, data: data};
     };

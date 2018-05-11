@@ -12,8 +12,8 @@ function loginControllerFunction($scope, $state, $rootScope) {
 
 
     };
-    
-    
+
+
 
     $scope.login = function(){
         $scope.loginName = $scope.loginName.trim();
@@ -45,7 +45,7 @@ function loginControllerFunction($scope, $state, $rootScope) {
         if(s.length > 20){
             return false;
         }
-        
+
         for (i = 0; i < s.length; i++) {
             code = s.charCodeAt(i);
             if (!(code > 47 && code < 58) && !(code > 64 && code < 91) && !(code > 96 && code < 123) && code !== 45 && code !== 95) {
@@ -54,8 +54,11 @@ function loginControllerFunction($scope, $state, $rootScope) {
         }
         return true;
     };
-    
 
+
+    $scope.toAbout  = function() {
+        $state.go('about');
+    }
 
 
 }

@@ -39,7 +39,8 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
     /* Constants to help build connections */
     $scope.constraints = {
         video: true,
-        audio: true
+        //audio: true
+        audio: false
     };
 
     $scope.offerOptions = {
@@ -152,6 +153,9 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
     $scope.stateChange = function(event){
         console.log('in stateChange');
+        for(user in $scope.peerConnection) {
+            console.log(user, " (", $scope.peerConnection[user].id, "), ", $scope.peerConnection[user].peer.iceConnectionState);
+        }
         //todo
         //for(var i=0; i<$scope.connections.length; i++){
         //    if($scope.connections[i].iceConnectionState === 'completed'){
@@ -165,7 +169,8 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         if($rootScope.username !== username) {
             var temp = new RTCPeerConnection($scope.peerConnectionConfig);
             temp.onicecandidate = $scope.gotIceCandidate;
-            temp.onaddstream = $scope.gotRemoteStream;
+            //temp.onaddstream = $scope.gotRemoteStream;
+            temp.ontrack    = $scope.gotRemoteStream;
             temp.oniceconnectionstatechange = $scope.stateChange;
             $scope.localStream.getTracks().forEach( (track) => {
                 temp.addTrack(track, $scope.localStream);
@@ -242,18 +247,25 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
         var html =  '<div class="col-md-2"><div class="margin-xs"><video id="remoteVideo-' + id + '" autoplay height="100%" width="100%"></video></div></div>';
 
         //add element to video container
-        var element = $('#videoContainer');
-        element.append(html);
+        var container = $('#videoContainer');
 
         // add video stream to new element
-        element = $('#remoteVideo-' + id)[0];
-        $scope.remoteStreams.push(element);
+        var element = $('#remoteVideo-' + id)[0];
+        if(element === undefined) {
+            container.append(html);
+            element = $('#remoteVideo-' + id)[0]
+            console.log("Element should now be defined: ", element);
+            $scope.remoteStreams.push(element);
+            console.log($scope.remoteStreams);
+        } else {
+            console.log("Element ", element);
+        }
 
         if ('srcObject' in element) {
-            element.srcObject = event.stream;
+            element.srcObject = event.streams[0];
         } else {
             // Avoid using this in new browsers, as it is going away.
-            element.src = window.URL.createObjectURL(event.stream);
+            element.src = window.URL.createObjectURL(event.streams[0]);
         }
     };
 
