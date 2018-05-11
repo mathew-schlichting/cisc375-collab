@@ -97,6 +97,8 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
     $scope.closeStream = function(){
         if($scope.localStream !== null){
+            var element;
+            
             $scope.localStream.getTracks().forEach(track => track.stop());
             $scope.send('stop_streaming');
 
@@ -104,12 +106,12 @@ function roomControllerFunction($scope, $state, $stateParams, $rootScope, $compi
 
             for(var user in $scope.users){
                 if($scope.users[user].username !== $rootScope.username){
-                    $('#remoteVideo-' + $scope.users[user].username)[0].srcObject = undefined;
+                    element = $('#remoteVideo-' + $scope.users[user].username)[0];
+                    if(element) {
+                        element.srcObject = undefined;
+                    }
                 }
             }
-            //for(user in $scope.peerConnection){
-            //    $scope.peerConnection[user].stream.getTracks().forEach(track => track.stop);
-            //}
         }
     };
 
